@@ -1,6 +1,10 @@
 # Licencia Comercial — KP-IA Frameworks
 
-Copyright 2026 KP-IA Frameworks. Todos los derechos reservados.
+Copyright 2026 Jose Martin Aguilar (KP-IA Frameworks). Todos los derechos reservados.
+
+**Autor original:** Jose Martin Aguilar (HarmonicGun / hummer2.0@hotmail.com).
+
+**Uso por Inteligencia Operativa (GO) / Grupo Ortiz:** Autorizado sin costo adicional. El autor es el director del departamento y creador del framework. La rama `joseaguilar_go` en el repositorio oficial constituye evidencia publica de este uso autorizado.
 
 ---
 
