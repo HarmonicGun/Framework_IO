@@ -1,0 +1,89 @@
+{
+  "_schema": "1.2",
+  "_descripcion": "Registro de ejemplo — Departamento ficticio con 3 proyectos",
+  "_ultima_actualizacion": "2026-05-12",
+  "departamento": "Departamento Ejemplo",
+  "proyectos": {
+    "alfa": {
+      "nombre": "Proyecto Alfa",
+      "carpeta": "proyecto_alfa",
+      "owner": "Ana",
+      "short_name": "Alfa",
+      "clasificacion": "Produccion",
+      "fase": 8,
+      "estado": "Activo",
+      "semaforo": "Verde",
+      "prioridad": 1,
+      "%_mvp": 95,
+      "ultima_evidencia": "commit abc123 — hotfix memoria",
+      "bloqueo_principal": "",
+      "notas": "Produccion estable. Monitoreo activo.",
+      "historial_kpi": [
+        {"semana": "2026-05-11", "%_mvp": 95, "flujos_implementados": 1, "flujos_testeados": 1, "semaforo": "Verde", "bloqueo": ""}
+      ],
+      "dias_sin_actividad": 0,
+      "ultima_entrada_diario": "2026-05-12"
+    },
+    "beta": {
+      "nombre": "Proyecto Beta",
+      "carpeta": "proyecto_beta",
+      "owner": "Luis",
+      "short_name": "Beta",
+      "clasificacion": "Desarrollo activo",
+      "fase": 5,
+      "estado": "Activo",
+      "semaforo": "Amarillo",
+      "prioridad": 2,
+      "%_mvp": 60,
+      "ultima_evidencia": "test auth.py — 12/12 pasando",
+      "bloqueo_principal": "Diseno de roles pendiente con sponsor",
+      "notas": "Modulo auth 66% completo. Bloqueado por decision externa.",
+      "historial_kpi": [
+        {"semana": "2026-05-04", "%_mvp": 50, "flujos_implementados": 4, "flujos_testeados": 3, "semaforo": "Amarillo", "bloqueo": "Diseno de roles pendiente"},
+        {"semana": "2026-05-11", "%_mvp": 60, "flujos_implementados": 6, "flujos_testeados": 5, "semaforo": "Amarillo", "bloqueo": "Diseno de roles pendiente con sponsor"}
+      ],
+      "dias_sin_actividad": 1,
+      "ultima_entrada_diario": "2026-05-11"
+    },
+    "gamma": {
+      "nombre": "Proyecto Gamma",
+      "carpeta": "proyecto_gamma",
+      "owner": "Carlos",
+      "short_name": "Gamma",
+      "clasificacion": "Archivo",
+      "fase": 0,
+      "estado": "Archivado",
+      "semaforo": "Rojo",
+      "prioridad": 99,
+      "%_mvp": 10,
+      "ultima_evidencia": "demo inicial — 2026-04-15",
+      "bloqueo_principal": "Sin sponsor. Cancelado.",
+      "notas": "Proyecto archivado. Solo referencia.",
+      "historial_kpi": [
+        {"semana": "2026-04-15", "%_mvp": 10, "flujos_implementados": 1, "flujos_testeados": 0, "semaforo": "Rojo", "bloqueo": "Cancelado"}
+      ],
+      "dias_sin_actividad": 27,
+      "ultima_entrada_diario": "2026-04-15"
+    }
+  },
+  "metricas_departamento": {
+    "total_proyectos": 3,
+    "activos": 2,
+    "en_produccion": 1,
+    "en_desarrollo": 1,
+    "bloqueados": 1,
+    "zombies": 1,
+    "historial_semanal": [
+      {
+        "semana": "2026-05-11",
+        "total_proyectos": 3,
+        "activos": 2,
+        "verdes": 1,
+        "amarillos": 1,
+        "rojos": 1,
+        "zombies": 1,
+        "fecha_reporte": "2026-05-12"
+      }
+    ]
+  }
+}

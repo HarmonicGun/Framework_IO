@@ -1,0 +1,65 @@
+{
+  "_schema": "1.2",
+  "_descripcion": "Registro estructurado de proyectos del portafolio. Se actualiza cada viernes. Incluye historial para acumulacion mensual de KPIs.",
+  "_ultima_actualizacion": "",
+  "departamento": "",
+  "proyectos": {
+    "proyecto-ejemplo": {
+      "nombre": "Proyecto Ejemplo",
+      "carpeta": "proyecto_ejemplo",
+      "owner": "",
+      "short_name": "Ejemplo",
+      "clasificacion": "Desarrollo activo",
+      "fase": 0,
+      "estado": "Activo",
+      "semaforo": "Verde",
+      "prioridad": 1,
+      "%_mvp": 0,
+      "ultima_evidencia": "",
+      "bloqueo_principal": "",
+      "notas": "",
+      "historial_kpi": [
+        {
+          "semana": "",
+          "%_mvp": 0,
+          "flujos_implementados": 0,
+          "flujos_testeados": 0,
+          "semaforo": "Verde",
+          "bloqueo": "",
+          "tokens_entrada": 0,
+          "tokens_salida": 0,
+          "modelo_principal": ""
+        }
+      ],
+      "dias_sin_actividad": 0,
+      "ultima_entrada_diario": "",
+      "metricas_agentes": {
+        "tokens_entrada": 0,
+        "tokens_salida": 0,
+        "subagent_exitosos": 0,
+        "subagent_fallidos": 0,
+        "costo_estimado": 0.0
+      }
+    }
+  },
+  "metricas_departamento": {
+    "total_proyectos": 1,
+    "activos": 1,
+    "en_produccion": 0,
+    "en_desarrollo": 0,
+    "bloqueados": 0,
+    "zombies": 0,
+    "historial_semanal": [
+      {
+        "semana": "",
+        "total_proyectos": 1,
+        "activos": 1,
+        "verdes": 1,
+        "amarillos": 0,
+        "rojos": 0,
+        "zombies": 0,
+        "fecha_reporte": ""
+      }
+    ]
+  }
+}

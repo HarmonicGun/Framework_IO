@@ -1,0 +1,44 @@
+#!/bin/bash
+# Pre-push hook: bloquea push a master.
+# Solo el admin (HarmonicGun / el lead) puede autorizar via env var.
+#
+# Para bypass (SOLO admin): FRAMEWORK_ADMIN=true git push origin master
+
+remote="$1"
+url="$2"
+
+while read local_ref local_sha remote_ref remote_sha; do
+    # Extraer el nombre de la rama remota
+    branch=$(echo "$remote_ref" | sed 's|refs/heads/||')
+
+    if [ "$branch" = "master" ] || [ "$branch" = "main" ]; then
+        if [ "${FRAMEWORK_ADMIN}" = "true" ]; then
+            echo "[framework-kit] Admin override activo. Push a master permitido."
+            exit 0
+        fi
+
+        cat << 'EOF'
+
+============================================================
+  BLOQUEADO — NO puedes hacer push a master/main.
+============================================================
+
+  Esta rama esta protegida. Solo el lead actualiza master.
+
+  Para trabajar en el framework:
+    1. Crea tu propia rama:  git checkout -b tu-nombre/tu-cambio
+    2. Haz commit ahi:       git commit -m "tu cambio"
+    3. Si el cambio debe ir a master, contacta a el lead.
+    4. NUNCA hagas push a master.
+
+  Para recibir actualizaciones:
+    git pull origin master   (esto SI esta permitido)
+
+============================================================
+
+EOF
+        exit 1
+    fi
+done
+
+exit 0

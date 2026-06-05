@@ -1,0 +1,26 @@
+#!/bin/bash
+# Pre-commit hook: advierte si estas commiteando directamente en master.
+# No bloquea, pero recuerda la politica.
+
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+if [ "$branch" = "master" ] || [ "$branch" = "main" ]; then
+    cat << 'EOF'
+
+============================================================
+  ADVERTENCIA — Estas commiteando en master/main.
+============================================================
+
+  Recuerda: solo el lead actualiza master.
+
+  Si estas probando algo local, considera crear una rama:
+    git checkout -b tu-nombre/tu-cambio
+
+  Si eres el lead, ignora este mensaje.
+
+============================================================
+
+EOF
+fi
+
+exit 0

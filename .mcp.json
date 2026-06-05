@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "notebooklm": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "notebooklm-mcp@latest"
+      ],
+      "env": {
+        "HEADLESS": "true",
+        "NOTEBOOKLM_TOOL_PROFILE": "standard",
+        "STEALTH_ENABLED": "true",
+        "MAX_SESSIONS": "3",
+        "SESSION_TIMEOUT": "900",
+        "ANSWER_TIMEOUT_MS": "120000"
+      }
+    }
+  }
+}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Informe Ejecutivo — la organizacion</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--go:#FB670B;--go-dim:rgba(251,103,11,0.10);--black:#0C0C0C;--s1:#141414;--s2:#1C1C1C;--s3:#252525;--border:rgba(255,255,255,0.07);--text:#F0F0F0;--muted:#707070;--mono:'JetBrains Mono',monospace;--ui:'Inter',sans-serif;--gr:#22C55E;--gr-dim:rgba(34,197,94,0.10);--ye:#EAB308;--ye-dim:rgba(234,179,8,0.10);--rd:#EF4444;--rd-dim:rgba(239,68,68,0.10)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--black);color:var(--text);font-family:var(--ui);font-size:14px;line-height:1.5}
+.hdr{display:flex;align-items:center;gap:16px;padding:14px 32px;background:var(--s1);border-bottom:2px solid var(--go)}
+.logo{width:36px;height:36px;background:var(--go);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.hdr-title{font-size:15px;font-weight:700}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.hdr-badge{margin-left:auto;background:var(--go-dim);border:1px solid rgba(251,103,11,0.3);border-radius:6px;padding:5px 14px;font-size:11px;font-weight:700;color:var(--go)}
+.main{padding:20px 28px;max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.verdict{background:var(--s1);border:1px solid var(--border);border-left:3px solid var(--go);border-radius:10px;padding:14px 20px}
+.verdict p{font-size:12px;color:var(--muted);line-height:1.6}
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:var(--go);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.kpi-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center}
+.card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:6px}
+.kpi-val{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-0.03em;line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.prog{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;margin-top:6px}
+.b-go{background:var(--go-dim);color:var(--go)}
+.b-gr{background:var(--gr-dim);color:var(--gr)}
+.b-ye{background:var(--ye-dim);color:var(--ye)}
+.b-rd{background:var(--rd-dim);color:var(--rd)}
+.st-p{display:inline-flex;font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px;background:rgba(34,197,94,0.1);color:#4ADE80}
+.st-d{display:inline-flex;font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px;background:rgba(251,103,11,0.1);color:var(--go)}
+.st-n{display:inline-flex;font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px;background:rgba(255,255,255,0.05);color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block}
+.d-gr{background:var(--gr)}
+.d-ye{background:var(--ye)}
+.d-rd{background:var(--rd)}
+.tl-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center}
+.tl-val{font-family:var(--mono);font-size:36px;font-weight:700}
+.tl-label{font-size:11px;color:var(--muted);margin-top:4px}
+.pcard{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--go);border-radius:10px;padding:16px 18px;margin-bottom:12px}
+.pcard-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+.pcard-name{font-size:14px;font-weight:700}
+.pcard-owner{font-size:11px;color:var(--muted)}
+.pcard-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+.pcard-meta{text-align:center}
+.pcard-meta-val{font-family:var(--mono);font-size:18px;font-weight:700}
+.pcard-meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.pcard-badges{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.pcard-footer{font-size:10px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.wow-table{width:100%;border-collapse:collapse;font-size:12px}
+.wow-table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--border)}
+.wow-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.wow-up{color:var(--gr);font-weight:700}
+.wow-down{color:var(--rd);font-weight:700}
+.wow-flat{color:var(--muted)}
+.ftr{background:var(--s1);border-top:1px solid var(--border);padding:10px 32px;display:flex;justify-content:space-between;margin-top:6px}
+.ftr p{font-size:11px;color:var(--muted)}
+
+@media (max-width: 768px){
+  .hdr{padding:10px 14px;gap:10px}
+  .hdr-title{font-size:13px}
+  .hdr-badge{font-size:10px;padding:4px 10px}
+  .main{padding:12px 14px;gap:10px}
+  .row2,.row3,.row4,.pcard-metrics{grid-template-columns:1fr}
+  .kpi-val{font-size:24px}
+  .tl-val{font-size:28px}
+  .pcard-header{flex-direction:column;gap:8px}
+  .wow-table{font-size:10px}
+  .ftr{flex-direction:column;gap:4px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">GO</div>
+  <div>
+    <div class="hdr-title">Informe Ejecutivo Semanal — Inteligencia Operativa</div>
+    <div class="hdr-sub">___HEADER_DATE___</div>
+  </div>
+  <div class="hdr-badge">___HEADER_BADGE___</div>
+</div>
+
+<div class="main">
+
+  <div class="verdict">
+    <p>___VERDICT_TEXT___</p>
+  </div>
+
+  <div class="sec">KPIs del Portafolio</div>
+  <div class="row4">
+    ___KPI_ROW___
+  </div>
+
+  <div class="sec">Semáforo del Portafolio</div>
+  <div class="row3">
+    ___TRAFFIC_LIGHTS___
+  </div>
+
+  <div class="sec">Proyectos</div>
+  ___PROJECT_CARDS___
+
+  <div class="sec">Comparativo Semana contra Semana (WoW)</div>
+  <div class="card" style="overflow-x:auto">
+    ___WOW_TABLE___
+  </div>
+
+</div>
+
+<div class="ftr">
+  <p>___FOOTER_DATE___</p>
+  <p>la organizacion · Inteligencia Operativa · Confidencial</p>
+</div>
+
+</body>
+</html>
