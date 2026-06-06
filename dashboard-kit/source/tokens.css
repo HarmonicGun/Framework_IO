@@ -1,0 +1,8 @@
+/* SOURCE: tokens.css — edit this file, run build_dashboard.py to rebuild */
+:root{
+  --o:#FB670B;--ow:#F97316;--bg:#09090B;--s1:#111113;--s2:#18181B;--s3:#27272A;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);
+  --t1:#FAFAFA;--t2:#A1A1AA;--t3:#52525B;
+  --ve:#00A36E;--am:#D97706;--ro:#E53E3E;
+  --fd:'Space Grotesk',sans-serif;--fb:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;
+}

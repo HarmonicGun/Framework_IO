@@ -1,0 +1,253 @@
+{
+  "generated_at": "2024-01-31T12:00:00",
+  "department": {
+    "commits_total": 42,
+    "active_projects": 3,
+    "contributors_active": 3,
+    "semaforo": {
+      "Green": 2,
+      "Yellow": 1,
+      "Red": 0
+    },
+    "range": {
+      "from": "2024-01-01",
+      "to": "2024-01-31"
+    },
+    "commits_by_day": [
+      {"date": "2024-01-01", "commits": 2},
+      {"date": "2024-01-02", "commits": 0},
+      {"date": "2024-01-03", "commits": 4},
+      {"date": "2024-01-04", "commits": 1},
+      {"date": "2024-01-05", "commits": 3},
+      {"date": "2024-01-08", "commits": 5},
+      {"date": "2024-01-09", "commits": 2},
+      {"date": "2024-01-10", "commits": 6},
+      {"date": "2024-01-11", "commits": 3},
+      {"date": "2024-01-12", "commits": 4},
+      {"date": "2024-01-15", "commits": 2},
+      {"date": "2024-01-16", "commits": 1},
+      {"date": "2024-01-17", "commits": 3},
+      {"date": "2024-01-18", "commits": 2},
+      {"date": "2024-01-19", "commits": 4},
+      {"date": "2024-01-31", "commits": 0}
+    ]
+  },
+  "projects": [
+    {
+      "slug": "proyecto_alfa",
+      "nombre": "Proyecto Alfa",
+      "pct_mvp": 65,
+      "owner": "dev_alice",
+      "fase": 5,
+      "classification": "development",
+      "status": "On track",
+      "semaforo": "Green",
+      "active": true,
+      "visible": true,
+      "commits_7d": 8,
+      "commits_30d": 22,
+      "git_dias_sin_actividad": 1,
+      "bloqueo": null,
+      "colabs": ["dev_bob"]
+    },
+    {
+      "slug": "proyecto_beta",
+      "nombre": "Proyecto Beta",
+      "pct_mvp": 82,
+      "owner": "dev_bob",
+      "fase": 7,
+      "classification": "pilot",
+      "status": "In pilot",
+      "semaforo": "Green",
+      "active": true,
+      "visible": true,
+      "commits_7d": 5,
+      "commits_30d": 14,
+      "git_dias_sin_actividad": 0,
+      "bloqueo": null,
+      "colabs": []
+    },
+    {
+      "slug": "proyecto_gamma",
+      "nombre": "Proyecto Gamma",
+      "pct_mvp": 40,
+      "owner": "dev_carol",
+      "fase": 4,
+      "classification": "development",
+      "status": "Pending review",
+      "semaforo": "Yellow",
+      "active": true,
+      "visible": true,
+      "commits_7d": 3,
+      "commits_30d": 6,
+      "git_dias_sin_actividad": 3,
+      "bloqueo": "Waiting for API spec",
+      "colabs": []
+    }
+  ],
+  "contributors": [
+    {
+      "person": "dev_alice",
+      "commits": 18,
+      "repos": 2
+    },
+    {
+      "person": "dev_bob",
+      "commits": 15,
+      "repos": 2
+    },
+    {
+      "person": "dev_carol",
+      "commits": 9,
+      "repos": 1
+    }
+  ],
+  "portfolio": {
+    "by_classification": {
+      "development": 2,
+      "pilot": 1
+    }
+  },
+  "activity": {
+    "repos": [
+      {"repo": "proyecto_alfa", "project": "proyecto_alfa", "commits": 22, "last_commit_at": "2024-01-31T10:00:00"},
+      {"repo": "proyecto_beta", "project": "proyecto_beta", "commits": 14, "last_commit_at": "2024-01-31T09:00:00"},
+      {"repo": "proyecto_gamma", "project": "proyecto_gamma", "commits": 6, "last_commit_at": "2024-01-29T11:00:00"}
+    ],
+    "contributors": [
+      {"person": "dev_alice", "id": "dev_alice", "name": "dev_alice", "commits": 18},
+      {"person": "dev_bob", "id": "dev_bob", "name": "dev_bob", "commits": 15},
+      {"person": "dev_carol", "id": "dev_carol", "name": "dev_carol", "commits": 9}
+    ],
+    "edges": [
+      {"from": "dev_alice", "id": "dev_alice", "to": "proyecto_alfa", "commits": 12},
+      {"from": "dev_alice", "id": "dev_alice", "to": "proyecto_beta", "commits": 6},
+      {"from": "dev_bob", "id": "dev_bob", "to": "proyecto_beta", "commits": 8},
+      {"from": "dev_bob", "id": "dev_bob", "to": "proyecto_alfa", "commits": 7},
+      {"from": "dev_carol", "id": "dev_carol", "to": "proyecto_gamma", "commits": 9}
+    ]
+  },
+  "projects_detail": {
+    "proyecto_alfa": {
+      "pct_mvp": 65,
+      "semaforo": "Green",
+      "status": "On track",
+      "bloqueo": null,
+      "commits_by_day": [
+        {"date": "2024-01-08", "commits": 4},
+        {"date": "2024-01-10", "commits": 3},
+        {"date": "2024-01-15", "commits": 5},
+        {"date": "2024-01-31", "commits": 0}
+      ],
+      "contributors": [
+        {"person": "dev_alice", "commits": 12},
+        {"person": "dev_bob", "commits": 7}
+      ],
+      "branches": [
+        {"branch": "feature/auth", "ahead": 2, "commits_count": 8},
+        {"branch": "main", "ahead": 0, "commits_count": 22}
+      ],
+      "recent": [
+        {"sha": "a1b2c3d", "msg": "add user auth endpoint", "author": "dev_alice", "committed_date": "2024-01-31"},
+        {"sha": "e4f5g6h", "msg": "fix token expiry bug", "author": "dev_bob", "committed_date": "2024-01-30"}
+      ],
+      "meta": {"tech_stack": "[\"Python\",\"FastAPI\",\"PostgreSQL\"]"}
+    },
+    "proyecto_beta": {
+      "pct_mvp": 82,
+      "semaforo": "Green",
+      "status": "In pilot",
+      "bloqueo": null,
+      "commits_by_day": [
+        {"date": "2024-01-09", "commits": 2},
+        {"date": "2024-01-12", "commits": 4},
+        {"date": "2024-01-19", "commits": 4},
+        {"date": "2024-01-31", "commits": 0}
+      ],
+      "contributors": [
+        {"person": "dev_bob", "commits": 8},
+        {"person": "dev_alice", "commits": 6}
+      ],
+      "branches": [
+        {"branch": "main", "ahead": 0, "commits_count": 14}
+      ],
+      "recent": [
+        {"sha": "x7y8z9a", "msg": "deploy to staging", "author": "dev_bob", "committed_date": "2024-01-31"},
+        {"sha": "b2c3d4e", "msg": "pilot feedback fixes", "author": "dev_alice", "committed_date": "2024-01-30"}
+      ],
+      "meta": {"tech_stack": "[\"Go\",\"React\",\"Redis\"]"}
+    },
+    "proyecto_gamma": {
+      "pct_mvp": 40,
+      "semaforo": "Yellow",
+      "status": "Pending review",
+      "bloqueo": "Waiting for API spec",
+      "commits_by_day": [
+        {"date": "2024-01-05", "commits": 3},
+        {"date": "2024-01-17", "commits": 3},
+        {"date": "2024-01-29", "commits": 0}
+      ],
+      "contributors": [
+        {"person": "dev_carol", "commits": 9}
+      ],
+      "branches": [
+        {"branch": "dev/initial", "ahead": 4, "commits_count": 6},
+        {"branch": "main", "ahead": 0, "commits_count": 0}
+      ],
+      "recent": [
+        {"sha": "f5g6h7i", "msg": "scaffold project structure", "author": "dev_carol", "committed_date": "2024-01-17"}
+      ],
+      "meta": {"tech_stack": "[\"Python\",\"Streamlit\"]"}
+    }
+  },
+  "persons_detail": {
+    "dev_alice": {
+      "total_commits": 18,
+      "commits_by_day": [
+        {"date": "2024-01-08", "commits": 4},
+        {"date": "2024-01-10", "commits": 3},
+        {"date": "2024-01-15", "commits": 5}
+      ],
+      "repos": [
+        {"repo": "proyecto_alfa", "project": "proyecto_alfa", "commits": 12},
+        {"repo": "proyecto_beta", "project": "proyecto_beta", "commits": 6}
+      ],
+      "recent": [
+        {"sha": "a1b2c3d", "msg": "add user auth endpoint", "repo": "proyecto_alfa", "committed_date": "2024-01-31"},
+        {"sha": "b2c3d4e", "msg": "pilot feedback fixes", "repo": "proyecto_beta", "committed_date": "2024-01-30"}
+      ]
+    },
+    "dev_bob": {
+      "total_commits": 15,
+      "commits_by_day": [
+        {"date": "2024-01-09", "commits": 2},
+        {"date": "2024-01-12", "commits": 4},
+        {"date": "2024-01-19", "commits": 4}
+      ],
+      "repos": [
+        {"repo": "proyecto_beta", "project": "proyecto_beta", "commits": 8},
+        {"repo": "proyecto_alfa", "project": "proyecto_alfa", "commits": 7}
+      ],
+      "recent": [
+        {"sha": "x7y8z9a", "msg": "deploy to staging", "repo": "proyecto_beta", "committed_date": "2024-01-31"},
+        {"sha": "e4f5g6h", "msg": "fix token expiry bug", "repo": "proyecto_alfa", "committed_date": "2024-01-30"}
+      ]
+    },
+    "dev_carol": {
+      "total_commits": 9,
+      "commits_by_day": [
+        {"date": "2024-01-05", "commits": 3},
+        {"date": "2024-01-17", "commits": 3}
+      ],
+      "repos": [
+        {"repo": "proyecto_gamma", "project": "proyecto_gamma", "commits": 9}
+      ],
+      "recent": [
+        {"sha": "f5g6h7i", "msg": "scaffold project structure", "repo": "proyecto_gamma", "committed_date": "2024-01-17"}
+      ]
+    }
+  },
+  "config": {
+    "projects": {}
+  }
+}

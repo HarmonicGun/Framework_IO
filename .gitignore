@@ -11,9 +11,7 @@ node_modules/
 # Solo raiz: examples/playbook_registry.json es ficticio y SI se versiona
 /playbook_registry.json
 
-# Observatorio: datos reales de GO — NUNCA versionar (fuga detectada 2026-06-05)
-# Preventivo: NO destrackea lo ya commiteado, eso requiere purga de historial (FASE 0)
-observatorio/api/static/snapshot.json
-observatorio/api/static/dashboard_data.js
-**/snapshot*.json
-**/dashboard_data*.js
+# Datos reales — NUNCA versionar. Bloqueo por nombre exacto (no patron amplio)
+# El kit no tiene observatorio/ con datos reales; archivos de ejemplo SI se versionan
+**/snapshot.json
+**/dashboard_data.js

@@ -1,0 +1,222 @@
+/* SOURCE: core/chart-kit.js — edit this file, run build_dashboard.py to rebuild */
+
+// ─── CHARTS ───────────────────────────────────────────────────────
+function destroyCharts(){CHARTS.forEach(function(c){c.dispose();});CHARTS=[];}
+function mk(el,opt){
+  if(typeof el==='string')el=document.getElementById(el);
+  if(!el)return null;
+  var c=echarts.init(el,null,{renderer:'canvas'});
+  c.setOption(Object.assign({backgroundColor:'transparent'},opt));
+  CHARTS.push(c); return c;
+}
+window.addEventListener('resize',function(){CHARTS.forEach(function(c){c.resize();});MCHARTS.forEach(function(c){c.resize();});});
+// chart for modal/expand (outside destroyCharts cycle from router)
+function mkM(el,opt){
+  if(typeof el==='string')el=document.getElementById(el);
+  if(!el)return null;
+  var c=echarts.init(el,null,{renderer:'canvas'});
+  c.setOption(Object.assign({backgroundColor:'transparent'},opt));
+  MCHARTS.push(c); return c;
+}
+function axisTheme(){return {grid:{left:44,right:16,top:18,bottom:34},
+  xAxis:{type:'category',axisLabel:AXIS,axisLine:{lineStyle:{color:'rgba(255,255,255,.1)'}}},
+  yAxis:{type:'value',splitLine:{lineStyle:GRID},axisLabel:AXIS},
+  tooltip:{trigger:'axis',backgroundColor:'#18181B',borderColor:'rgba(255,255,255,.1)',textStyle:{color:'#FAFAFA'}}};}
+function lineSeries(data,color,smooth,area){
+  if(smooth===undefined)smooth=.4; if(area===undefined)area=true;
+  return {type:'line',smooth:smooth,symbol:'none',data:data,lineStyle:{color:color,width:2},itemStyle:{color:color},
+    areaStyle:area?{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'70'},{offset:1,color:color+'00'}])}:null};}
+
+// GitHub-style heatmap (square cells + levels)
+function calHeatmap(elId,data,minD,maxD){
+  if(!data||!data.length)return;
+  var mx=Math.max.apply(null,data.map(function(d){return d[1];}).concat([1]));
+  mk(elId,{tooltip:{formatter:function(p){return p.value[0]+': '+p.value[1]+' commits';},backgroundColor:'#18181B',borderColor:'rgba(255,255,255,.1)',textStyle:{color:'#FAFAFA'}},
+    visualMap:{type:'piecewise',show:false,
+      pieces:[{min:1,max:2},{min:3,max:5},{min:6,max:10},{min:11,max:20},{min:21}],
+      inRange:{color:['#3A1D08','#7C2D12','#C2410C','#F97316','#FB670B']}},
+    calendar:{range:[minD,maxD],cellSize:['auto',13],orient:'horizontal',left:28,right:10,top:28,bottom:10,
+      splitLine:{show:false},
+      itemStyle:{color:'#161618',borderColor:'#0A0A0A',borderWidth:3,borderRadius:2},
+      dayLabel:{firstDay:1,nameMap:['','M','','W','','F',''],color:'#52525B',fontSize:8},
+      monthLabel:{color:'#A1A1AA',fontSize:11,nameMap:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']},
+      yearLabel:{show:false}},
+    series:[{type:'heatmap',coordinateSystem:'calendar',data:data,
+      itemStyle:{borderColor:'#0A0A0A',borderWidth:3,borderRadius:3}}]});
+}
+
+// Force graph (repos + persons)
+// Colors: REPO = fixed project color (CM) or OTROS gray if unmapped (circle).
+// PERSON = uniform slate + border, roundRect shape -> visually distinct from repo.
+var PERSONA_COLOR='#CBD5E1';
+// unique color per project: mapped -> brand color (CM); others -> stable hue from name.
+function hashHue(s){var h=0;s=s||'x';for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h%360;}
+function repoColor(r){var c=CM[r.project];if(c&&c!==OTROS)return c;return 'hsl('+hashHue(r.repo||r.project)+',62%,58%)';}
+function graphSeries(act){
+  var nodes=[],links=[];
+  (act.repos||[]).forEach(function(r){nodes.push({id:'r:'+r.repo,name:r.repo,category:0,value:r.commits,
+    symbol:'circle',symbolSize:Math.min(76,16+Math.sqrt(r.commits)*4.6),
+    itemStyle:{color:repoColor(r),borderColor:'rgba(0,0,0,.4)',borderWidth:1}});});
+  (act.contributors||[]).forEach(function(c){nodes.push({id:'p:'+(c.id||c.person),name:c.name||c.person,category:1,value:c.commits,
+    symbol:'roundRect',symbolSize:Math.min(54,14+Math.sqrt(c.commits)*3.2),
+    itemStyle:{color:PERSONA_COLOR,borderColor:'#475569',borderWidth:2}});});
+  (act.edges||[]).forEach(function(e){links.push({source:'p:'+(e.from||e.id),target:'r:'+e.to,value:e.commits,
+    lineStyle:{width:Math.min(7,1+e.commits/7),color:'rgba(255,255,255,.45)',curveness:.14}});});
+  return {nodes:nodes,links:links};
+}
+function graphOption(act,big){
+  var g=graphSeries(act);
+  return {tooltip:{formatter:function(p){return p.dataType==='edge'?p.data.value+' commits':p.name+': '+(p.value||0)+' commits';},backgroundColor:'#18181B',borderColor:'rgba(255,255,255,.1)',textStyle:{color:'#FAFAFA'}},
+    legend:{data:['projects','persons'],textStyle:{color:'#A1A1AA'},top:0,icon:'roundRect'},
+    series:[{type:'graph',layout:'force',roam:true,draggable:true,
+      categories:[{name:'projects',itemStyle:{color:'#FB670B'}},{name:'persons',itemStyle:{color:PERSONA_COLOR}}],
+      // label with dark halo + bottom position -> readable over light/dark node
+      label:{show:true,position:'bottom',distance:3,color:'#FAFAFA',fontSize:big?13:11,fontWeight:600,
+        fontFamily:'Inter',textBorderColor:'#09090B',textBorderWidth:3.5},
+      lineStyle:{color:'rgba(255,255,255,.14)'},
+      force:{repulsion:big?320:170,edgeLength:big?[80,220]:[55,150],gravity:.06,layoutAnimation:true},
+      // on node hover: highlight edges in orange, dim the rest
+      emphasis:{focus:'adjacency',scale:1.06,label:{color:'#FFFFFF'},
+        lineStyle:{color:'#FB670B',opacity:1,width:3},itemStyle:{shadowBlur:18,shadowColor:'rgba(251,103,11,.45)'}},
+      blur:{itemStyle:{opacity:.28},label:{opacity:.25},lineStyle:{opacity:.05}},
+      data:g.nodes,links:g.links}]};
+}
+// hover over node -> tint adjacent edges orange
+function attachGraphHover(chart){
+  if(!chart)return chart;
+  chart.on('mouseover',function(p){
+    if(p.dataType!=='node')return;
+    var id=p.data&&p.data.id; if(!id)return;
+    var opt=chart.getOption().series[0];
+    var links=opt.links||[], nodes=opt.data||[];
+    var edgeIdxs=[],nodeIds=new Set([id]);
+    links.forEach(function(l,i){
+      if(l.source===id||l.target===id){
+        edgeIdxs.push(i);
+        nodeIds.add(l.source===id?l.target:l.source);
+      }
+    });
+    var nodeIdxs=[];nodes.forEach(function(n,i){if(nodeIds.has(n.id))nodeIdxs.push(i);});
+    if(edgeIdxs.length)chart.dispatchAction({type:'highlight',seriesIndex:0,dataType:'edge',dataIndex:edgeIdxs});
+    if(nodeIdxs.length)chart.dispatchAction({type:'highlight',seriesIndex:0,dataIndex:nodeIdxs});
+  });
+  chart.on('mouseout',function(p){
+    if(p.dataType!=='node')return;
+    chart.dispatchAction({type:'downplay',seriesIndex:0});
+  });
+  return chart;
+}
+function mkGraph(elId,act,big){attachGraphHover(mk(elId,graphOption(act,big)));}
+// Portfolio health scatter
+function mkHealthScatter(elId){
+  var projs=(S.projects||[]).filter(function(p){return p.active&&p.visible;});
+  if(!projs.length)return;
+  var maxC=Math.max.apply(null,projs.map(function(p){return p.commits_30d||0;}).concat([10]));
+  var midX=Math.round(maxC*0.45);
+  var maxX=Math.ceil(maxC*1.12);
+  function sz(p){return Math.max(14,Math.min(52,14+Math.sqrt(p.commits_7d||0)*4.5));}
+  function toItem(p){
+    return {name:p.slug,value:[p.commits_30d||0,p.pct_mvp||0],symbolSize:sz(p),
+      itemStyle:{color:CM[p.slug]||OTROS,opacity:.88}};}
+  var isRisk=function(p){return p.semaforo==='Red'||(p.git_dias_sin_actividad!=null&&p.git_dias_sin_actividad>4&&(p.pct_mvp||0)<70);};
+  var risk=projs.filter(isRisk), normal=projs.filter(function(p){return !isRisk(p);});
+  var ttFmt=function(params){
+    var p=(S.projects||[]).find(function(x){return x.slug===params.name;})||{};
+    return '<b style="font-family:Inter">'+params.name+'</b><br>'+
+      '<span style="color:#A1A1AA">Owner:</span> '+(p.owner||'-')+'<br>'+
+      '<span style="color:#A1A1AA">MVP:</span> '+(p.pct_mvp||0)+'% &nbsp; <span style="color:#A1A1AA">Phase:</span> '+(p.fase||'-')+'<br>'+
+      '<span style="color:#A1A1AA">Commits 30d:</span> '+(p.commits_30d||0)+' &nbsp; <span style="color:#A1A1AA">7d:</span> '+(p.commits_7d||0)+'<br>'+
+      '<span style="color:#A1A1AA">Days inactive:</span> '+(p.git_dias_sin_actividad!=null?p.git_dias_sin_actividad:'-')+
+      (p.bloqueo?'<br><span style="color:#FDA4A4">Blocker: '+p.bloqueo.slice(0,48)+'</span>':'');};
+  var quadAreas=[
+    [{xAxis:midX,yAxis:75,itemStyle:{color:'rgba(0,163,110,.05)'},name:'Active production'},{xAxis:maxX,yAxis:100}],
+    [{xAxis:0,yAxis:75,itemStyle:{color:'rgba(255,255,255,.02)'},name:'Stable'},{xAxis:midX,yAxis:100}],
+    [{xAxis:0,yAxis:0,itemStyle:{color:'rgba(229,62,62,.07)'},name:'Risk'},{xAxis:midX,yAxis:75}],
+    [{xAxis:midX,yAxis:0,itemStyle:{color:'rgba(251,103,11,.04)'},name:'Building'},{xAxis:maxX,yAxis:75}]
+  ];
+  mk(elId,{
+    tooltip:{trigger:'item',formatter:ttFmt,backgroundColor:'#18181B',borderColor:'rgba(255,255,255,.1)',textStyle:{color:'#FAFAFA',fontSize:12}},
+    grid:{left:36,right:80,top:16,bottom:28},
+    xAxis:{type:'value',name:'commits',nameLocation:'end',nameTextStyle:{color:'#52525B',fontSize:9},min:0,max:maxX,
+      splitLine:{lineStyle:GRID},axisLabel:Object.assign({},AXIS,{fontSize:10}),axisLine:{lineStyle:{color:'rgba(255,255,255,.08)'}}},
+    yAxis:{type:'value',name:'MVP%',nameLocation:'end',nameTextStyle:{color:'#52525B',fontSize:9},
+      min:Math.max(0,Math.floor((Math.min.apply(null,projs.map(function(p){return p.pct_mvp||0;}))-12)/10)*10),
+      max:100,splitLine:{lineStyle:GRID},axisLabel:Object.assign({},AXIS,{fontSize:10})},
+    series:[
+      {name:'normal',type:'scatter',data:normal.map(toItem),
+        label:{show:true,formatter:'{b}',position:'right',fontSize:10,fontFamily:'Inter',color:'#A1A1AA',distance:6},
+        emphasis:{scale:1.2},
+        markLine:{silent:true,symbol:'none',animation:false,
+          lineStyle:{type:'dashed',color:'rgba(255,255,255,.1)',width:1},
+          label:{show:false},
+          data:[{xAxis:midX},{yAxis:75}]},
+        markArea:{silent:true,
+          label:{show:true,position:'insideTopRight',fontSize:9,color:'rgba(255,255,255,.2)',fontFamily:'Inter'},
+          data:quadAreas}},
+      {name:'risk',type:'effectScatter',data:risk.map(toItem),
+        rippleEffect:{scale:3.5,brushType:'fill'},
+        label:{show:true,formatter:'{b}',position:'right',fontSize:10,fontFamily:'Inter',color:'#FDA4A4',distance:6},
+        emphasis:{scale:1.2}}
+    ]});
+}
+
+// Portfolio donut — shared option (overview / expand / presentation)
+function donutOption(big){
+  var pf=Object.entries((S.portfolio||{}).by_classification||{});
+  return {tooltip:{show:false},
+    legend:{show:false},
+    series:[{type:'pie',radius:big?['46%','78%']:['50%','80%'],center:['50%','50%'],
+      label:{color:'#D4D4D8',fontSize:big?14:12,formatter:big?'{b}\n{c}':'{b}'},
+      labelLine:{lineStyle:{color:'#52525B'}},
+      selectedMode:'single',
+      selectedOffset:28,
+      emphasis:{scale:false,focus:'self'},
+      blur:{itemStyle:{opacity:0.15}},
+      data:pf.map(function(x,i){return {name:x[0],value:x[1],itemStyle:{color:PALETTE[i%6]}};})}]};
+}
+// click -> slice summary popup; hover separates slice and dims the rest
+function attachDonutClick(chart){
+  if(!chart)return;
+  var total=Object.values((S.portfolio||{}).by_classification||{}).reduce(function(a,b){return a+b;},0)||1;
+  chart.on('click',function(p){
+    if(p.dataType!=='item'&&p.componentType!=='series')return;
+    showSlice(p.name,p.value,((p.value/total)*100),p.event&&p.event.event);
+  });
+  chart.on('mouseover',function(p){
+    if(p.dataType!=='item'&&p.componentType!=='series')return;
+    chart.dispatchAction({type:'select',seriesIndex:0,dataIndex:p.dataIndex});
+    showSlice(p.name,p.value,((p.value/total)*100),p.event&&p.event.event);
+  });
+  chart.on('mouseout',function(p){
+    if(p.componentType!=='series')return;
+    chart.dispatchAction({type:'unselect',seriesIndex:0,dataIndex:p.dataIndex});
+  });
+}
+function mkDonut(elId){ var c=mk(elId,donutOption(false)); attachDonutClick(c); }
+
+// ─── CONTRIBUTION (range-aware) ───────────────────────────────────
+function personRangeCommits(person){
+  var pd=(S.persons_detail||{})[person]; if(!pd)return 0;
+  return filt(pd.commits_by_day||[]).reduce(function(a,d){return a+d.commits;},0);
+}
+function contribBarsHTML(big){
+  var list=(S.contributors||[]).map(function(c,i){return {c:c,i:i,n:personRangeCommits(c.person)};});
+  var mx=Math.max.apply(null,list.map(function(x){return x.n;}).concat([1]));
+  list.sort(function(a,b){return b.n-a.n;});
+  return list.map(function(x){
+    var c=x.c,col=PALETTE[x.i%6],pct=Math.round(x.n/mx*100),av=big?34:22,fs=big?13:11,bh=big?9:5;
+    return '<div class="person" onclick="go(\'person\',\''+c.person+'\')" style="gap:10px;'+(big?'padding:9px 0;border-bottom:1px solid var(--bd)':'margin-bottom:0')+'">'+
+      '<div class="av" style="width:'+av+'px;height:'+av+'px;font-size:'+(big?12:8)+'px;flex-shrink:0;background:'+col+'22;color:'+col+'">'+initials(c.person)+'</div>'+
+      '<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+        '<span style="font-size:'+fs+'px;color:var(--t1);font-weight:500">'+(big?c.person:c.person.split(' ')[0])+'</span>'+
+        '<span class="mono" style="font-size:'+fs+'px;color:var(--t1)">'+x.n+(big?' <span class="t3" style="font-weight:400">('+c.commits+' global · '+c.repos+' repos)</span>':'')+'</span></div>'+
+      '<div class="pbar" style="height:'+bh+'px"><i style="width:'+pct+'%;background:'+col+'"></i></div></div></div>';
+  }).join('');
+}
+function contribListHTML(){
+  return (S.contributors||[]).slice(0,6).map(function(c){
+    return '<div class="person" onclick="go(\'person\',\''+c.person+'\')"><div class="av">'+initials(c.person)+'</div>'+
+      '<div><div style="font-size:13px;font-weight:500">'+c.person+'</div>'+
+      '<div class="t3 mono" style="font-size:11px">'+c.commits+' commits · '+c.repos+' repos</div></div></div>';
+  }).join('');
+}
