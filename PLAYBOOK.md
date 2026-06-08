@@ -195,6 +195,40 @@ rm desktop.png mobile.png
 
 **Archivo:** `reportes_playbook/`
 
+**Editar el dashboard:** NO editar `dashboard.html` directamente. Editar archivos en `source/` y reconstruir:
+```bash
+cd dashboard-kit/api/static
+python3 build_dashboard.py --check  # verifica JS (node --check sobre bundle)
+python3 build_dashboard.py          # reconstruye dashboard.html
+```
+
+**Pipeline source-modules (arquitectura):**
+
+Los archivos fuente viven en `dashboard-kit/api/static/source/`. El orden de carga (JS_ORDER) es critico:
+
+```
+kpi-utils.js        → hashSlug, colorForIndex (golden-angle), helpers KPI
+core/chart-kit.js   → ECharts helpers: lineOption, barOption, donutOption
+modal.js            → modal base reutilizable
+overlay.js          → overlay base
+pres-config-kit.js  → configurador presentacion: PRES_CFG, filtros, modal
+presentation-engine.js → buildScenes() lee PRES_CFG, escenas fullscreen, dispose()
+enroll-kit.js       → badge proyectos sin registrar, modal enrollment
+data-render.js      → renderizado tarjetas + grid auto-fill + badge git/no-git
+```
+
+Regla: nunca mover un modulo antes de sus dependencias. `pres-config-kit` SIEMPRE antes de `presentation-engine`. Al agregar modulo nuevo: actualizar JS_ORDER en build_dashboard.py.
+
+**Auto-discovery (no-git):**
+
+```bash
+PYTHONPATH=. python3 -m dashboard_kit.collector.folder_scan   # descubre carpetas
+PYTHONPATH=. python3 -m dashboard_kit.enroll --auto FOLDER    # enrola carpeta
+PYTHONPATH=. python3 -m dashboard_kit.enroll --ignore FOLDER  # ignora permanente
+```
+
+Enrollment persiste en tabla `folder_registry` (SQLite). Proyectos sin git aparecen con badge "sin git" y se nutren de `file_activity` (senales filesystem).
+
 ---
 
 ## 6. Pipeline para nuevos proyectos

@@ -53,6 +53,118 @@ Regla de oro del orden: ramas suben primero (una a una) -> luego master baja a l
 
 Higiene previa: rama de quien NO es owner ni colaborador del repo, sin commits unicos, se borra (con backup `git bundle`). Si tiene trabajo unico, no se borra: se integra o se marca al usuario.
 
+## REGLA 7 — Protocolo de sincronizacion multi-rama sin perder mejoras
+
+Cuando una o mas ramas estan adelantadas a master con mejoras reales, seguir este orden exacto.
+Sin este orden se pierden commits o se mergea a ciegas y se destruye trabajo.
+
+### Paso 1 — Diagnostico
+
+```bash
+git fetch --all
+git log master..rama-A --oneline   # commits en rama-A que no estan en master
+git log rama-A..master --oneline   # commits en master que no estan en rama-A
+```
+
+Si ambos tienen commits exclusivos => ramas DIVERGIDAS (no fast-forward). Requiere merge 3-way.
+Si solo rama-A tiene commits => master es ancestro directo. Fast-forward posible.
+
+### Paso 2 — Detectar archivos solapados entre ramas
+
+Antes de mergear nada, identificar que archivos tocaron TODAS las ramas:
+
+```bash
+git diff --name-only master...rama-A
+git diff --name-only master...rama-B
+```
+
+Archivos en ambas listas = conflicto potencial. Marcarlos.
+
+### Paso 3 — Dry-run obligatorio (antes de tocar master)
+
+Nunca mergear a master sin dry-run si hay archivos solapados.
+
+```bash
+git checkout -b test-merge-dry-run rama-A
+git merge --no-commit --no-ff rama-B
+```
+
+Si hay conflictos: `git status` muestra "modificados por ambos".
+Inspeccionar cada conflicto: `grep -n "<<<<<<" archivo_conflicto`
+
+Decidir resolucion ANTES de ejecutar en master:
+- Guardar version correcta: `git checkout HEAD -- archivo` (conserva rama-A)
+- O aplicar theirs: `git checkout MERGE_HEAD -- archivo` (conserva rama-B)
+- Criterio: conservar la version mas completa. La que tiene mas funcionalidad/logica.
+
+Abortar test y limpiar:
+
+```bash
+git reset --hard HEAD
+git checkout master
+git branch -D test-merge-dry-run
+```
+
+### Paso 4 — Merge real en orden (una rama a la vez)
+
+**Primero la rama mas adelantada** (mas commits unicos). Si cabe fast-forward, usarlo:
+
+```bash
+git merge --ff-only rama-A   # solo si master es ancestro directo
+```
+
+Si no cabe FF:
+
+```bash
+git merge --no-ff rama-A -m "merge: rama-A -> master (YYYY-MM-DD) — descripcion"
+```
+
+**Luego la segunda rama.** Si hay conflicto conocido del dry-run, resolverlo igual:
+
+```bash
+git merge --no-ff rama-B -m "merge: rama-B -> master (YYYY-MM-DD) — descripcion"
+# conflicto esperado:
+git checkout HEAD -- archivo_conflicto   # conservar version correcta
+git add archivo_conflicto
+git commit
+```
+
+### Paso 5 — Push master
+
+```bash
+git push origin master
+```
+
+Verificar: `git log --oneline -3` debe mostrar los merge commits recien creados.
+
+### Paso 6 — Bajar master a todas las ramas (FF)
+
+Despues de consolidar master, alinear cada rama. Siempre fast-forward:
+
+```bash
+git checkout rama-A && git merge --ff-only master && git push origin rama-A
+git checkout rama-B && git merge --ff-only master && git push origin rama-B
+git checkout master
+```
+
+Si FF falla en una rama => esa rama tiene commits nuevos que no se mergearon. PARAR y reportar.
+
+### Regla de oro del orden
+
+```
+1. Diagnostico (fetch + log)
+2. Detectar solapamiento (diff --name-only)
+3. Dry-run en rama temporal (NO en master)
+4. Resolver conflictos con criterio (mas completo gana)
+5. Abortar dry-run, volver a master limpio
+6. Merge ramas -> master (una a una, mas adelantada primero)
+7. Push master
+8. FF master -> cada rama
+9. Push todas las ramas
+```
+
+**Nunca saltar el dry-run si hay archivos solapados. Una hora de dry-run evita dias de recuperacion.**
+
 ## Enforcement mecanico (git-guard)
 
 El hook `pre-push` instalado en cada repo bloquea automaticamente:
@@ -68,3 +180,76 @@ bash scripts/install-git-guard.sh
 
 Los override (`GO_PUSH_OVERRIDE`, `GO_FORCE_OK`) existen para casos legitimos,
 pero obligan un acto consciente. Un agente NO los activa salvo orden explicita del usuario.
+
+## REGLA 7 — Protocolo de sincronizacion multi-rama sin perder mejoras
+
+Cuando una o mas ramas estan adelantadas a master con mejoras reales, seguir este orden exacto.
+Sin este orden se pierden commits o se mergea a ciegas y se destruye trabajo.
+
+### Paso 1 — Diagnostico
+
+```bash
+git fetch --all
+git log master..rama-A --oneline   # commits en rama-A que no estan en master
+git log rama-A..master --oneline   # commits en master que no estan en rama-A
+```
+
+Si ambos tienen commits exclusivos => ramas DIVERGIDAS. Requiere merge 3-way.
+Si solo rama-A tiene commits => master es ancestro directo. Fast-forward posible.
+
+### Paso 2 — Detectar archivos solapados entre ramas
+
+```bash
+git diff --name-only master...rama-A
+git diff --name-only master...rama-B
+```
+
+Archivos en ambas listas = conflicto potencial. Marcarlos.
+
+### Paso 3 — Dry-run obligatorio (antes de tocar master)
+
+```bash
+git checkout -b test-merge-dry-run rama-A
+git merge --no-commit --no-ff rama-B
+```
+
+Si hay conflictos: `git status` muestra "modificados por ambos".
+Decidir resolucion ANTES de ejecutar en master. Criterio: version mas completa gana.
+
+Abortar dry-run:
+
+```bash
+git reset --hard HEAD
+git checkout master
+git branch -D test-merge-dry-run
+```
+
+### Paso 4 — Merge real (una rama a la vez)
+
+```bash
+git merge --ff-only rama-A    # si cabe FF
+git merge --no-ff rama-A -m "merge: rama-A -> master (YYYY-MM-DD)"   # si no
+```
+
+### Paso 5 — Push master
+
+```bash
+git push origin master
+```
+
+### Paso 6 — FF master a cada rama
+
+```bash
+git checkout rama-A && git merge --ff-only master && git push origin rama-A
+git checkout master
+```
+
+### Regla de oro del orden
+
+```
+1. Diagnostico  2. Solapamiento  3. Dry-run en rama temporal
+4. Resolver     5. Abortar dry-run  6. Merge ramas -> master (una a una)
+7. Push master  8. FF master -> ramas  9. Push ramas
+```
+
+**Nunca saltar el dry-run si hay archivos solapados. Una hora de dry-run evita dias de recuperacion.**
