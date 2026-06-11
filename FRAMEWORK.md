@@ -222,7 +222,7 @@ Para apps web del ecosistema GO, existen componentes shell plug-and-play documen
 
 | Componente | Fuente canonica | Implementaciones |
 |---|---|---|
-| **UI Shell completo** (topbar + sidebar + main) | `context_desing_go/guias y manuales/markdowns/ui_shell_component.md` v1.1 | `proyecto-a`, `proyecto-b` |
+| **UI Shell completo** (topbar + sidebar + main) | `context_desing_go/guias y manuales/markdowns/ui_shell_component.md` v1.1 | `multi_mkt_study_v2`, `proyecto-a` |
 | **Sidebar colapsable** | seccion 3-5 del shell doc | `proyecto-a` v1.1 (con boton plegar) |
 | **Tokens GO base** | `context_desing_go/context_design.md` | Todos los proyectos visuales |
 

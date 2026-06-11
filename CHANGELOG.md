@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.1] — 2026-06-11
+
+### Added
+- `CLASE_30MIN.md` — Charla framework 30min (bloques 1-8): instalacion, ciclo semanal, diseno visual, MCPs, sub-agentes, adversarial, caveman.
+- `GIT_PROTOCOL.md` REGLA 7 — Protocolo de sincronizacion multi-rama sin perder mejoras (diagnostico, solapamiento, dry-run, merge ordenado, FF a ramas).
+
+### Changed
+- `.gitignore` — Patrones de snapshot/data ampliados (`**/snapshot*.json`, `**/dashboard_data*.js`).
+- `CLAUDE.md` seccion 14 — Sync rule actualizada: menciona `dashboard-kit/` como capa generica portable.
+- `FRAMEWORK.md` — Referencia de implementaciones UI Shell actualizada.
+
+### Fixed
+- `GIT_PROTOCOL.md` — REGLA 7 duplicada eliminada (estaba dos veces, fusionado en copia unica detallada).
+
 ## [0.7.0] — 2026-06-01
 
 ### Added
@@ -78,7 +92,7 @@
 - `CLAUDE.md` seccion 12 — Sistema de diseno visual: `context_desing_go/` como fuente unica de verdad para todo output visual.
 - Regla mandatoria: clonar `https://github.com/joseaguilar-wq/context_desing_go.git` antes de generar dashboards, reportes, presentaciones, web, canvas.
 - Tokens base obligatorios documentados en CLAUDE.md (paleta, tipografia, modo oscuro).
-- `FRAMEWORK.md` referencias de diseno actualizadas a `context_desing_go/`.
+- `FRAMEWORK.md` referencias actualizadas: `IDENTIDAD DE MARCA/` → `context_desing_go/`.
 - `scripts/check_update.py` portado desde framework_kit.
 - `githooks/` portado desde framework_kit (pre-commit, pre-push).
 - `.mcp.json` portado desde framework_kit (configuracion notebooklm MCP).

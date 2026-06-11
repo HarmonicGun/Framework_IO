@@ -798,7 +798,8 @@ Verificar: "usa el tool get_health del servidor notebooklm"
 - `servers/` (tiene configuracion local)
 - `node_modules/`, `package-lock.json`
 - `.claude/` (settings locales)
-- **`observatorio/`** (dashboard con datos reales — NUNCA a kit. El diseno de dashboards es norma interna de este framework, no del kit publico.)
+- **`observatorio/`** (dashboard con datos reales — NUNCA a kit. Capa generica portable en `framework_kit/dashboard-kit/`.)
+- Patrones de datos bloqueados por patron (no solo carpeta): `**/snapshot*.json`, `**/dashboard_data*.js`
 
 ### Regla de sanitizacion
 

@@ -13,5 +13,5 @@ node_modules/
 
 # Datos reales — NUNCA versionar. Bloqueo por nombre exacto (no patron amplio)
 # El kit no tiene observatorio/ con datos reales; archivos de ejemplo SI se versionan
-**/snapshot.json
-**/dashboard_data.js
+**/snapshot*.json
+**/dashboard_data*.js
