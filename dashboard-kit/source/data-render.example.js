@@ -24,8 +24,26 @@ function init(snap){
   TO=ANCHOR; FROM=addDays(ANCHOR,-29);
   document.getElementById('dFrom').value=FROM;
   document.getElementById('dTo').value=TO;
-  buildSidebar(); updateVerdict();
+  buildSidebar(); updateVerdict(); updateFreshChip();
   go('overview');
+}
+
+// ─── FRESH CHIP — data staleness indicator (uses data_as_of, not generated_at) ──
+// Creates/updates a chip next to the Refresh button showing how old the data is.
+// setInterval keeps it updated while the page is open.
+let FRESH_TIMER=null;
+function updateFreshChip(){
+  var btn=document.getElementById('syncBtn'); if(!btn)return;
+  var chip=document.getElementById('freshChip');
+  if(!chip){chip=document.createElement('span');chip.id='freshChip';chip.className='fresh-chip';btn.insertAdjacentElement('beforebegin',chip);}
+  var src=S?(S.data_as_of||S.generated_at):null;
+  if(!src){chip.textContent='data: ?';return;}
+  var t=src.length<=10?new Date(src+'T00:00:00'):new Date(src);
+  var h=(Date.now()-t.getTime())/3600000;
+  var label=h<1?'<1h':h<48?Math.round(h)+'h':Math.round(h/24)+'d';
+  chip.textContent='data: '+label+' ago';
+  chip.className='fresh-chip'+(h>48?' bad':h>24?' warn':'');
+  if(!FRESH_TIMER)FRESH_TIMER=setInterval(updateFreshChip,60000);
 }
 
 // localStorage merge (for standalone mode without server)

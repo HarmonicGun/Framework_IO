@@ -120,32 +120,30 @@ Actualiza `playbook_registry.json` con historial fresco.
 
 ### 5.4 Dashboards — REGLA MANDATORIA
 
-**Siempre se generan 4 archivos.** Sin excepciones. Sin excusas.
+**El dashboard-kit es el estandar.** Usar `dashboard-kit/` para generar el observatorio del equipo.
 
-| Archivo | Spec |
+**Pipeline viernes:**
+1. Producir `snapshot.json` con datos frescos (estructura en `dashboard-kit/snapshot.example.json`)
+2. Construir dashboard: `cd dashboard-kit && python3 build_dashboard.py`
+3. Abrir `dashboard.html` en browser
+4. Usar boton "Exportar PNG" del dashboard (snapdom 2x en `#app`). NO puppeteer. NO file://.
+
+**Entregables (2 PNG):**
+
+| Archivo | Como obtener |
 |---|---|
-| `Dashboard_[DIA]_[DD]_[Mes]_desktop.html` | Multi-columna, contenido completo |
-| `Dashboard_[DIA]_[DD]_[Mes]_desktop.jpg` | Screenshot 1440 x altura-contenido |
-| `Dashboard_[DIA]_[DD]_[Mes]_mobile.html` | Single-columna 390px, diseno compacto |
-| `Dashboard_[DIA]_[DD]_[Mes]_mobile.jpg` | Screenshot 390 x altura-contenido-medida |
+| `Observatorio_overview_[YYYY-MM-DD].png` | Boton Exportar en vista Overview |
+| `Observatorio_activity_[YYYY-MM-DD].png` | Boton Exportar en vista Activity |
 
-#### Desktop spec
+Guardar en `reportes_playbook/`. El pipeline antiguo (HTML manual + Puppeteer + 4 archivos) es obsoleto.
 
-- Multi-columna: hero, semaforos en row de 5, KPIs en row de 3, tabla + grafico Chart.js, highlights, pulls del dia
-- Altura: capturar a altura real del contenido (detectar con JS `scrollHeight` o usar 1250px seguro)
-- Incluir: tabla detallada de proyectos, grafico MVP%, avances, alertas, pulls recientes
-- NO omitir secciones por espacio — hay suficiente con multi-columna
+**Layout del dashboard:** ver `dashboard-kit/DASHBOARD_STANDARD.md`.
 
-#### Mobile spec
-
-- **PROHIBIDO:** `overflow: hidden`, `height: 100%` en html/body. Causa recorte en captura.
-- Contenedor: `.screen { width:390px; margin:0 auto; }` — sin altura fija, flujo natural.
-- Estructura: topbar → hero → signals (3) → titulo → project grid (2x2) → focus → footer
-- Diseno: fondo con gradiente radial naranja, cards con bordes redondeados, tipografia Inter
-- Proyectos: max 4 en grid 2x2. Si hay 5+, el resto va en seccion focus
-- NO tablas. NO graficos. NO `overflow:hidden`. Solo metricas esenciales.
-- Paleta: naranja #FB670B, verde #16c784, azul #4db6ff, violeta #b18cff, teal #14B8A6
-- **Altura se mide con JS.** Igual que desktop. NUNCA se adivina ni se fija a 844px.
+**Editar el dashboard:** NO editar `dashboard.html` directamente. Editar archivos en `dashboard-kit/source/` y reconstruir:
+```bash
+cd dashboard-kit
+python3 build_dashboard.py --check  # verifica JS (node --check sobre bundle)
+```
 
 #### Captura JPG
 
