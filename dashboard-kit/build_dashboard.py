@@ -22,6 +22,7 @@ JS_ORDER = [
     SRC / 'core' / 'chart-kit.js',
     SRC / 'modal-kit.js',
     SRC / 'overlay-kit.js',
+    SRC / 'pres-config-kit.js',
     SRC / 'presentation-engine.js',
     SRC / 'data-render.example.js',  # Replace with your own data-render.js
 ]

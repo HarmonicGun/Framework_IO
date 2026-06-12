@@ -22,7 +22,8 @@ dashboard-kit/
       chart-kit.js          ECharts wrappers (heatmap, graph, scatter, donut, bars)
     modal-kit.js            Expand and slice popup modals
     overlay-kit.js          Sync/refresh SSE overlay
-    presentation-engine.js  Fullscreen presentation mode
+    pres-config-kit.js      Presentation configurator (project/person/scene filter)
+    presentation-engine.js  Fullscreen presentation mode (8 scenes, autoplay, particles)
     data-render.example.js  Main render logic + router (adapt this to your project)
   snapshot.example.json     Example data structure — replace with real data
   build_dashboard.py        Builds dashboard.html from source/ files
@@ -92,8 +93,9 @@ let ANCHOR='2024-01-31';
 // 3. Label strings — change department name, section headers
 document.getElementById('tbar-title').textContent='Department';
 
-// 4. presentation-engine.js scene 0 — change team name/logo text
-'<div class="p-logo">TI</div><div class="p-h1">Team Intelligence</div>'
+// 4. Presentation branding — DO NOT edit presentation-engine.js.
+// Define window.PRES_BRAND in your shell HTML (see Shell HTML section):
+window.PRES_BRAND={logo:'TI',title:'Team Intelligence',org:'Your Org'};
 ```
 
 ## snapshot.json format
@@ -189,7 +191,7 @@ Minimal shell:
       <button class="btn sm" onclick="setCustom()">Apply</button>
       <button class="btn sm prim" id="syncBtn" disabled onclick="startRefresh()">Refresh</button>
       <button class="btn sm" onclick="openConfig()">Config</button>
-      <button class="btn sm" onclick="startPres()">Present</button>
+      <button class="btn sm" onclick="openPresConfig()">Present</button>
       <button class="btn sm" onclick="exportImg()">Export PNG</button>
       <span id="expmsg"></span>
     </div>
@@ -234,6 +236,8 @@ Minimal shell:
   </div>
 </div>
 
+<div id="presCfgModal" class="modal"></div>
+
 <div id="pres">
   <div id="pscene"></div>
   <div class="pnav">
@@ -245,6 +249,9 @@ Minimal shell:
   <div class="pprog" id="pprog"></div>
 </div>
 
+<!-- Presentation branding. MUST stay BEFORE the injected script:
+     build_dashboard.py injects into the LAST inline <script> block. -->
+<script>window.PRES_BRAND={logo:'TI',title:'Team Intelligence',org:''};</script>
 <script>
 /* injected by build_dashboard.py */
 </script>
@@ -268,3 +275,17 @@ To run with a server: implement a FastAPI (or any) server that:
 
 The Export PNG button uses snapdom to capture `#app` at 2x scale.
 Requires snapdom CDN loaded. Works in modern browsers without a server.
+
+## Presentation mode (PRES 2.0)
+
+8 scenes driven only by the generic snapshot shape (no hardcoded names):
+intro, period heatmap, numbers + sparkline, activity graph (auto-spotlight
+per person), portfolio + team, project cards, momentum bars, health + close.
+
+- Branding: `window.PRES_BRAND={logo,title,org,accent}` in the shell HTML.
+- Filter: `openPresConfig()` opens the configurator (requires `#presCfgModal` div).
+  `startPres()` still works directly (uses full selection).
+- Keys: arrows/space navigate, `A` toggles autoplay (7s/scene), `F` fullscreen, Esc exits.
+- Respects `prefers-reduced-motion` (no particles/autoplay/animations).
+- Charts in scenes use their own registry (PCHARTS) — they never touch the
+  dashboard CHARTS lifecycle.
