@@ -111,6 +111,30 @@ Orden obligatorio para toda tarea que toque codigo, archivos de config, esquemas
 
 ---
 
+## 0.3.2. Modo Quirurgico — Planeacion de cambios criticos — REGLA PERMANENTE
+
+**Cuando el usuario dice "planifica", "planeemos", "quiero planificar", o la tarea toca OV/NetSuite/DB/estados/dinero/3+ archivos, activar MODO QUIRURGICO.**
+
+Fases obligatorias:
+
+1. **Exploracion profunda**: 3 agentes Explore en paralelo (flujo principal, feature relacionada, datos/payload)
+2. **Clarificacion con usuario**: AskUserQuestion con 2-4 preguntas clave. Cero asumir.
+3. **Diseno**: 1 agente Plan con TODO el contexto de Fase 1 + respuestas de Fase 2
+4. **Revision adversarial**: 3 agentes en paralelo:
+   - Super-context (conoce todo el codebase)
+   - Zero-context (lectura fresca, cero asumir)
+   - Especialista (DB/state machine/data integrity)
+   Cada agente responde: cada linea exacta que cambiara, que rompe y como repararlo, bugs pre-existentes que el cambio expone, race conditions y edge cases.
+5. **Plan final ultra-detallado**: Cada archivo, cada linea exacta (codigo viejo → codigo nuevo). Registro de cada bug encontrado y mitigacion. Plan de verificacion. Rollback.
+
+**Estructura del plan final**: CONTEXTO (por que, decision del usuario, problema) + ARCHIVOS A MODIFICAR (numerados, 0 nuevos si posible) + CADA CAMBIO (linea exacta actual, linea exacta nueva, por que, que rompe, mitigacion) + QUE NO SE TOCA (archivos/funciones relacionados pero intactos, y por que) + VERIFICACION (comandos exactos) + ROLLBACK (como deshacer en prod).
+
+**Template**: `plantillas/PLAN_QUIRURGICO_TEMPLATE.md`
+
+**NO usar** para: typos, mensajes de texto, cambios de configuracion, consultas de exploracion.
+
+---
+
 ## 0.4. Optimizacion de Contexto — REGLA PERMANENTE
 
 **El contexto es recurso finito. Cada token leido = token no disponible para pensar.**
@@ -553,6 +577,14 @@ Frases: `hay una nueva carpeta`, `nuevo proyecto`, `revisemos este proyecto`
 2. Clasificar segun `FRAMEWORK.md` fases 0-9
 3. Proponer owner y siguiente paso
 4. Crear archivos minimos desde `plantillas/`
+
+---
+
+### H. Modo Quirurgico — Planeacion de cambios criticos
+
+Frases: `planifica esto`, `planeemos`, `quiero planificar`, `haz un plan quirurgico`
+
+Activar fase 3.5 del FRAMEWORK.md. Procedimiento: 3 Explore en paralelo + AskUserQuestion (2-4 preguntas) + 1 Plan + 3 Adversarial (super-context, zero-context, especialista) + plan ultra-detallado con cada linea exacta. Ver seccion 0.3.2.
 
 ---
 

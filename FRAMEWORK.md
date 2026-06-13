@@ -686,6 +686,33 @@ Debe definir:
 
 ---
 
+### Fase 3.5 — Planeacion Quirurgica (ANTES de tocar codigo)
+
+**Trigger**: Cambios que tocan OV, NetSuite, DB schema, estados, dinero, o 3+ archivos.
+
+**Procedimiento**:
+1. 3 agentes Explore en paralelo → entendimiento completo del codigo afectado (flujo principal, feature relacionada, datos/payload)
+2. Clarificar con usuario (AskUserQuestion, 2-4 preguntas clave — cero asumir)
+3. 1 agente Plan → diseno inicial con TODO el contexto
+4. 3 agentes adversariales en paralelo → encontrar bugs ANTES de escribir codigo:
+   - Super-context (conoce todo el codebase)
+   - Zero-context (lectura fresca, cero asumir)
+   - Especialista (DB/state machine/data integrity)
+5. Plan final ultra-detallado con cada linea exacta
+
+**Output**: Plan quirurgico en `docs/PLAN_<feature>_DD_MM_YY.md`
+
+**Criterio de salida**: 
+- [ ] 3 revisiones adversariales completadas
+- [ ] Cada linea de codigo a modificar documentada (viejo → nuevo)
+- [ ] Cada bug encontrado registrado con mitigacion
+- [ ] Plan de verificacion y rollback escrito
+- [ ] Usuario aprobo el plan (ExitPlanMode)
+
+**Template**: `plantillas/PLAN_QUIRURGICO_TEMPLATE.md`
+
+---
+
 ### Fase 4 — Diseno tecnico
 
 Archivo sugerido: `TECHNICAL_DESIGN.md` (opcional, crear solo si la fase esta activa)

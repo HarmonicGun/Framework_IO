@@ -21,6 +21,7 @@ Construir sistemas de automatizacion e inteligencia operativa que aumenten la ef
 5. **Reutilizacion obligatoria.** Patrones, codigo, plantillas, arquitectura.
 6. **Descubrimiento delegado, arquitectura centralizada.** El contributor documenta el AS-IS. El lider disena el TO-BE.
 7. **El lider disena direccion, no solo construye.** Ordenar, asignar, revisar, escalar, institucionalizar.
+8. **Planeacion quirurgica para cambios criticos.** Antes de tocar OV, NetSuite, DB, estados o 3+ archivos: 3 Explore + AskUserQuestion + 1 Plan + 3 Adversarial + plan linea-por-linea. Cero bugs escapados. Ver `CLAUDE.md` seccion 0.3.2 y `FRAMEWORK.md` Fase 3.5.
 
 ---
 
