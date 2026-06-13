@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.4] — 2026-06-13
+
+### Added
+- Modo Quirurgico v2.0.0 — Planeacion de cambios criticos (CLAUDE.md 0.3.2 + 3.H, FRAMEWORK.md Fase 3.5, PLAYBOOK.md principio 8)
+- `plantillas/PLAN_QUIRURGICO_TEMPLATE.md` — Template canonico para planes ultra-detallados
+- Procedimiento: 3 Explore + AskUserQuestion + 1 Plan + 3 Adversarial + plan linea-por-linea
+- Criterios de activacion: OV/NetSuite/DB/estados/dinero/3+ archivos
+
 ## [0.7.1] — 2026-06-11
 
 ### Added
