@@ -5,14 +5,14 @@ function openExp(kind){
   var t=document.getElementById('expTitle'),b=document.getElementById('expBody'),m=document.getElementById('expModal');
   MCHARTS.forEach(function(c){c.dispose();});MCHARTS=[];
   if(kind==='contrib'){
-    t.textContent='Contribution by person · '+FROM+' to '+TO;
+    t.textContent='Contribucion por persona · '+FROM+' a '+TO;
     b.innerHTML='<div style="display:flex;flex-direction:column">'+contribBarsHTML(true)+'</div>';
   }else if(kind==='donut'){
-    t.textContent='Portfolio by classification';
+    t.textContent='Portafolio por clasificacion';
     b.innerHTML='<div class="exp-grid"><div id="cPieExp" style="height:58vh;min-height:360px"></div>'+
-      '<div><div class="ey">Team</div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'+contribListHTML()+'</div></div></div>';
+      '<div><div class="ey">Equipo</div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'+contribListHTML()+'</div></div></div>';
   }else if(kind==='graph'){
-    t.textContent='Who works on what';
+    t.textContent='Quien trabaja en que';
     b.innerHTML='<div id="cGraphExp" style="height:66vh;min-height:440px"></div>';
   }
   m.classList.add('on');
@@ -34,8 +34,8 @@ function showSlice(name,value,pct,nativeEvt){
   bd.style.pointerEvents='none';
   var pop=document.createElement('div');pop.id='dtPopup';pop.className='dtPopup';
   pop.innerHTML='<div class="dt-name">'+esc(name)+'</div>'+
-    '<div class="dt-row"><span>Projects</span><span>'+value+'</span></div>'+
-    '<div class="dt-row"><span>% of total</span><span>'+pct.toFixed(1)+'%</span></div>';
+    '<div class="dt-row"><span>Proyectos</span><span>'+value+'</span></div>'+
+    '<div class="dt-row"><span>% del total</span><span>'+pct.toFixed(1)+'%</span></div>';
   host.appendChild(bd);host.appendChild(pop);
   var x=(nativeEvt&&nativeEvt.clientX)||window.innerWidth/2,y=(nativeEvt&&nativeEvt.clientY)||window.innerHeight/2;
   pop.style.left=Math.min(x+12,window.innerWidth-pop.offsetWidth-12)+'px';

@@ -26,6 +26,9 @@ function initPresCfg(){
   window.PRES_CFG = {
     projects: new Set((saved&&saved.projects&&saved.projects.length) ? saved.projects : allProj),
     persons:  new Set((saved&&saved.persons&&saved.persons.length) ? saved.persons : allPers),
+    dateMode: (saved&&saved.dateMode) || 'dashboard',
+    from: (saved&&saved.from) || null,
+    to: (saved&&saved.to) || null,
   };
 }
 
@@ -98,6 +101,18 @@ function openPresConfig(){
           '<div class="pcfg-list">'+contribs.map(personRow).join('')+'</div>'+
         '</div>'+
       '</div>'+
+      '<div class="pcfg-date-sec">'+
+        '<div class="pcfg-date-head">RANGO DE FECHAS</div>'+
+        '<div class="pcfg-date-opts">'+
+          '<button class="btn sm pcfg-date-opt" data-mode="dashboard" onclick="pcfgDateMode(this)">Rango del dashboard ('+FROM+' a '+TO+')</button>'+
+          '<button class="btn sm pcfg-date-opt" data-mode="full" onclick="pcfgDateMode(this)">Periodo completo (90d)</button>'+
+          '<button class="btn sm pcfg-date-opt" data-mode="custom" onclick="pcfgDateMode(this)">Personalizado</button>'+
+        '</div>'+
+        '<div id="pcfg-date-custom" style="display:none">'+
+          '<span>Desde</span><input type="date" class="dinput" id="pcfg-dfrom" value="'+FROM+'">'+
+          '<span>Hasta</span><input type="date" class="dinput" id="pcfg-dto" value="'+TO+'">'+
+        '</div>'+
+      '</div>'+
       '<div class="pcfg-foot">'+
         '<label class="pcfg-remember"><input type="checkbox" id="pcfg-remember"'+(hasSaved?' checked':'')+'> Recordar esta seleccion</label>'+
         '<span><button class="btn" onclick="closePresConfig()">Cancelar</button>'+
@@ -108,6 +123,18 @@ function openPresConfig(){
   document.getElementById('presCfgModal').innerHTML = html;
   document.getElementById('presCfgModal').classList.add('on');
   pcfgUpdateStartBtn();
+  // restaurar dateMode guardado
+  var dm=PRES_CFG.dateMode||'dashboard';
+  document.querySelectorAll('.pcfg-date-opt').forEach(function(b){
+    b.classList.toggle('on',b.dataset.mode===dm);
+  });
+  var cust=document.getElementById('pcfg-date-custom');
+  if(cust)cust.style.display=dm==='custom'?'flex':'none';
+  if(dm==='custom'){
+    var fi=document.getElementById('pcfg-dfrom'),ti=document.getElementById('pcfg-dto');
+    if(fi&&PRES_CFG.from)fi.value=PRES_CFG.from;
+    if(ti&&PRES_CFG.to)ti.value=PRES_CFG.to;
+  }
 }
 
 function closePresConfig(){
@@ -118,6 +145,13 @@ function pcfgToggleAll(kind, sel){
   var cls = kind==='proj'?'.pcfg-proj':'.pcfg-pers';
   document.querySelectorAll('#presCfgModal '+cls).forEach(function(cb){cb.checked = sel;});
   pcfgUpdateStartBtn();
+}
+
+function pcfgDateMode(btn){
+  document.querySelectorAll('.pcfg-date-opt').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var custom=document.getElementById('pcfg-date-custom');
+  if(custom)custom.style.display=btn.dataset.mode==='custom'?'flex':'none';
 }
 
 function pcfgUpdateStartBtn(){
@@ -138,13 +172,21 @@ function startPresWithConfig(){
 
   if (!projs.length) return;
 
+  var dateMode='dashboard';
+  document.querySelectorAll('.pcfg-date-opt.on').forEach(function(b){dateMode=b.dataset.mode;});
+  var dateFrom=dateMode==='custom'?(document.getElementById('pcfg-dfrom')||{}).value:null;
+  var dateTo=dateMode==='custom'?(document.getElementById('pcfg-dto')||{}).value:null;
+
   window.PRES_CFG = {
     projects: new Set(projs),
     persons: new Set(pers),
+    dateMode: dateMode,
+    from: dateFrom||null,
+    to: dateTo||null,
   };
 
   // Persistir
-  var data = {projects: projs, persons: pers};
+  var data = {projects: projs, persons: pers, dateMode: dateMode, from: dateFrom, to: dateTo};
   try { sessionStorage.setItem('obs_pres_cfg', JSON.stringify(data)); } catch(e) {}
   var remember = document.getElementById('pcfg-remember');
   if (remember && remember.checked) {

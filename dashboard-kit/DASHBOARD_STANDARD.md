@@ -1,7 +1,9 @@
-# Dashboard Kit — Standard
+# Dashboard Kit — Universal Department Observatory
 
-Dark-mode engineering team observatory dashboard kit.
+Dark-mode departmental observatory dashboard kit. Adaptable to ANY department
+(Technology, Sales, Finance, Marketing, HR, Admin, Management) via profile config.
 Single-page app: sidebar nav, ECharts, snapshot-driven data.
+See `ADAPTATION.md` for the Claude adaptation protocol.
 
 ## Stack
 
@@ -15,30 +17,71 @@ Single-page app: sidebar nav, ECharts, snapshot-driven data.
 ```
 dashboard-kit/
   source/
+    config/
+      defaults.js           DEPT_PROFILE system — schema, fallbacks, resolution layer
     tokens.css              Design tokens (CSS variables)
     components.css          All UI components
-    kpi-utils.js            Utility functions (esc, ymd, addDays, kpi, etc.)
+    kpi-utils.js            Utility functions (esc, ymd, addDays, kpi, formatKPI, etc.)
     core/
       chart-kit.js          ECharts wrappers (heatmap, graph, scatter, donut, bars)
     modal-kit.js            Expand and slice popup modals
-    overlay-kit.js          Sync/refresh SSE overlay
+    overlay-kit.js          Sync/refresh SSE overlay + auto-refresh timer
     pres-config-kit.js      Presentation configurator (project/person/scene filter)
     presentation-engine.js  Fullscreen presentation mode (8 scenes, autoplay, particles)
-    data-render.example.js  Main render logic + router (adapt this to your project)
+    data-render.example.js  Main render logic + router (profile-driven labels)
+    dashboard.template.html Sanitized HTML shell with brand slots (no org references)
+  profiles/
+    tech.js                 Technology/Engineering department profile
+    sales.js                Sales department profile
+    finance.js              Finance department profile
   snapshot.example.json     Example data structure — replace with real data
   build_dashboard.py        Builds dashboard.html from source/ files
+  ADAPTATION.md             Claude adaptation protocol — step-by-step guide
   DASHBOARD_STANDARD.md     This file
   dashboard.html            OUTPUT — generated, do not edit directly
 ```
 
 ## How to use
 
+### Quick start (with department profile)
+
+1. Pick a profile: `profiles/tech.js`, `profiles/sales.js`, or `profiles/finance.js`
+2. Produce a `snapshot.json` matching the structure in `snapshot.example.json`
+3. Run `python3 build_dashboard.py --profile profiles/sales.js`
+4. Open `dashboard.html` in a browser
+
+### Quick start (without profile)
+
+Uses Spanish tech defaults (backward compatible):
+
 1. Copy `source/data-render.example.js` -> `source/data-render.js`
 2. Edit `data-render.js`: replace placeholder strings with your team names/labels
 3. Produce a `snapshot.json` matching the structure in `snapshot.example.json`
-4. Create `dashboard.html` shell (see Shell HTML section below)
-5. Run `python3 build_dashboard.py` to inject CSS + JS into the shell
-6. Open `dashboard.html` in a browser (needs snapshot.json in same dir, or a server)
+4. Run `python3 build_dashboard.py` (uses `dashboard.template.html`)
+5. Open `dashboard.html` in a browser
+
+### Verify build
+
+```bash
+python3 build_dashboard.py --check  # node --check on JS bundle
+```
+
+## Department Profile System
+
+The dashboard reads ALL labels from `window.DEPT_PROFILE` via the resolution
+layer in `config/defaults.js`. Without DEPT_PROFILE, Spanish tech defaults apply.
+
+To adapt for a new department, create a JSON profile file with only the
+fields that differ from defaults. See `ADAPTATION.md` for the full protocol.
+
+Key profile fields:
+- `dataModel.hasGit` / `hasGraph` / `hasCommitFeed` — toggle git-specific features
+- `kpiTiles[]` — 4 KPI cards with labels, compute methods, and format
+- `nav` — all navigation and section labels
+- `charts` — chart titles and axis labels
+- `classification` — entity lifecycle taxonomy
+- `semaforo` — health/status labels
+- `autoRefreshMs` — auto-refresh interval (0 = disabled)
 
 ## Design tokens (tokens.css)
 
@@ -79,9 +122,11 @@ Each project gets one fixed color across all charts:
 
 Max 6 projects with unique colors. Extras get gray #606060.
 
-## Adapting data-render.example.js
+## Adapting for any department
 
-Key areas to change:
+See `ADAPTATION.md` for the full Claude adaptation protocol.
+
+Key areas to change (if not using profile system):
 
 ```js
 // 1. Semaforo keys — match your snapshot.json
@@ -271,9 +316,24 @@ To run with a server: implement a FastAPI (or any) server that:
 - `GET /snapshot.json` -> current snapshot
 - `POST /api/config/project/{slug}` -> save visibility/owner overrides
 
+## Auto-Refresh
+
+Set `autoRefreshMs` in the department profile to enable automatic data refresh:
+
+- `0` = disabled (default)
+- `300000` = every 5 minutes (recommended)
+- `60000` = every minute (high-frequency)
+
+The dashboard uses two strategies:
+1. **File mode:** Polls `snapshot.json` HEAD for `Last-Modified` changes every 30s.
+   On change, re-fetches and re-initializes the full dashboard.
+2. **Server mode:** Polls `/api/health` on the configured interval. If data age
+   exceeds `autoRefreshMs`, triggers SSE refresh via `/api/refresh/stream`.
+
 ## Export (PNG)
 
-The Export PNG button uses snapdom to capture `#app` at 2x scale.
+The Export PNG button uses snapdom to capture `#app` (desktop 2x) and builds
+a mobile DOM (iPhone 14 Pro Max 430px, 3x). Both PNGs download sequentially.
 Requires snapdom CDN loaded. Works in modern browsers without a server.
 
 ## Presentation mode (PRES 2.0)

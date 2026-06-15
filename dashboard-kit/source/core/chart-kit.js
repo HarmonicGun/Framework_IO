@@ -111,16 +111,29 @@ function attachGraphHover(chart){
   return chart;
 }
 function mkGraph(elId,act,big){attachGraphHover(mk(elId,graphOption(act,big)));}
+// commits de un proyecto DENTRO del rango FROM/TO activo (range-aware).
+// commits_by_day es una serie DISPERSA (solo dias con actividad, sin ceros)
+// dentro de la ventana 90d del snapshot. filt()-suma es correcta porque sumar
+// no requiere dias-cero. Mismo patron exacto que rankByRange() y personRangeCommits().
+// SIN serie (5 proyectos: observatorio_io, iniciativa_delta, alter_claude, Own AI,
+// multiestudo_mercado) -> retorna 0 (NO commits_30d): sin serie = sin actividad
+// medible en ningun rango. Asi NO se mezcla semantica rango-real con dato-fijo-30d.
+function projRangeCommits(slug){
+  var pd=(S.projects_detail||{})[slug];
+  if(!pd||!pd.commits_by_day||!pd.commits_by_day.length)return 0;
+  return filt(pd.commits_by_day).reduce(function(a,d){return a+d.commits;},0);
+}
 // Scatter salud del portafolio
 function mkHealthScatter(elId){
   var projs=(S.projects||[]).filter(function(p){return p.active&&p.visible;});
   if(!projs.length)return;
-  var maxC=Math.max.apply(null,projs.map(function(p){return p.commits_30d||0;}).concat([10]));
+  var rc={}; projs.forEach(function(p){rc[p.slug]=projRangeCommits(p.slug);});
+  var maxC=Math.max.apply(null,projs.map(function(p){return rc[p.slug];}).concat([10]));
   var midX=Math.round(maxC*0.45);
   var maxX=Math.ceil(maxC*1.12);
-  function sz(p){return Math.max(14,Math.min(52,14+Math.sqrt(p.commits_7d||0)*4.5));}
+  function sz(p){return Math.max(14,Math.min(52,14+Math.sqrt(rc[p.slug]||0)*3.0));}
   function toItem(p){
-    return {name:p.slug,value:[p.commits_30d||0,realPct(p)],symbolSize:sz(p),
+    return {name:p.slug,value:[rc[p.slug]||0,realPct(p)],symbolSize:sz(p),
       itemStyle:{color:CM[p.slug]||OTROS,opacity:.88}};}
   var isRisk=function(p){return p.semaforo==='Rojo'||(p.git_dias_sin_actividad!=null&&p.git_dias_sin_actividad>4&&realPct(p)<70);};
   var risk=projs.filter(isRisk), normal=projs.filter(function(p){return !isRisk(p);});
@@ -129,7 +142,7 @@ function mkHealthScatter(elId){
     return '<b style="font-family:Inter">'+params.name+'</b><br>'+
       '<span style="color:#A1A1AA">Owner:</span> '+(p.owner||'-')+'<br>'+
       '<span style="color:#A1A1AA">MVP:</span> '+realPct(p)+'% &nbsp; <span style="color:#A1A1AA">Fase:</span> '+(p.fase||'-')+'<br>'+
-      '<span style="color:#A1A1AA">Commits 30d:</span> '+(p.commits_30d||0)+' &nbsp; <span style="color:#A1A1AA">7d:</span> '+(p.commits_7d||0)+'<br>'+
+      '<span style="color:#A1A1AA">Commits (rango):</span> '+projRangeCommits(p.slug)+' &nbsp; <span style="color:#A1A1AA">7d:</span> '+(p.commits_7d||0)+'<br>'+
       '<span style="color:#A1A1AA">Dias sin actividad:</span> '+(p.git_dias_sin_actividad!=null?p.git_dias_sin_actividad:'-')+
       (p.bloqueo?'<br><span style="color:#FDA4A4">Bloqueo: '+p.bloqueo.slice(0,48)+'</span>':'');};
   var quadAreas=[
@@ -225,4 +238,37 @@ function contribListHTML(){
       '<div><div style="font-size:13px;font-weight:500">'+c.person+'</div>'+
       '<div class="t3 mono" style="font-size:11px">'+c.commits+' commits · '+c.repos+' repos</div></div></div>';
   }).join('');
+}
+
+// ─── EXPORT MOVIL: charts efimeros aislados de CHARTS[]/MCHARTS[] ─────
+// MEXPORT_CHARTS NO entra a destroyCharts() del router NI al resize listener
+// (L12 solo itera CHARTS y MCHARTS). Se disponen a mano al destruir el DOM movil.
+var MEXPORT_CHARTS=[];
+function mkExport(el,opt){
+  if(typeof el==='string')el=document.getElementById(el);
+  if(!el)return null;
+  var c=echarts.init(el,null,{renderer:'canvas'});
+  // animation:false -> render sincrono inmediato, captura determinista (bug #9).
+  c.setOption(Object.assign({backgroundColor:'transparent',animation:false},opt));
+  MEXPORT_CHARTS.push(c); return c;
+}
+function disposeExportCharts(){MEXPORT_CHARTS.forEach(function(c){try{c.dispose();}catch(e){}});MEXPORT_CHARTS=[];}
+// fuerza relayout+resize + onfinished -> garantiza pintura completa antes de snapdom.
+// NO usa requestAnimationFrame: en tab de fondo/headless rAF se throttlea y puede no
+// disparar nunca -> colgaria el export. Se usan setTimeout (que el navegador NO suspende):
+// 60ms para que el CSS se aplique antes de resize, y un fallback duro de 800ms que
+// SIEMPRE resuelve (fuera de cualquier rAF). animation:false hace 'finished' inmediato.
+function settleExportCharts(){
+  return new Promise(function(res){
+    var done=false; function finish(){if(done)return;done=true;res();}
+    setTimeout(function(){
+      var pending=MEXPORT_CHARTS.length;
+      if(!pending)return finish();
+      MEXPORT_CHARTS.forEach(function(c){
+        try{c.resize();}catch(e){}
+        try{c.on('finished',function f(){c.off('finished',f);if(--pending<=0)finish();});}catch(e){}
+      });
+    },60);
+    setTimeout(finish,800);
+  });
 }

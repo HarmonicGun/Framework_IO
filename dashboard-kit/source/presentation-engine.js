@@ -8,16 +8,51 @@ let PIDX=0, PSCENES=[], PCHARTS=[], PTIMERS=[], PAUTO=false, PPARTS=null;
 const PAUTO_MS=7000;
 function presBrand(){return Object.assign({logo:'io',title:'Observatorio',org:'',accent:'#FB670B'},window.PRES_BRAND||{});}
 function presReduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
+function presProjectGridClass(count){
+  if(count<=1)return ' cols-1';
+  if(count===2)return ' cols-2';
+  if(count<=4)return ' cols-2 cols-balanced';
+  if(count<=6)return ' cols-3';
+  if(count<=9)return ' cols-3 cols-dense';
+  return ' cols-4 cols-dense';
+}
+
+// date-aware filter: respeta PRES_CFG.dateMode (dashboard|full|custom)
+function presFilt(arr,key){
+  key=key||'date';
+  if(!window.PRES_CFG)return filt(arr,key);
+  if(PRES_CFG.dateMode==='full')return arr||[];
+  if(PRES_CFG.dateMode==='custom'&&PRES_CFG.from&&PRES_CFG.to){
+    return (arr||[]).filter(function(x){return x[key]>=PRES_CFG.from&&x[key]<=PRES_CFG.to;});
+  }
+  return filt(arr,key);
+}
+function presLabelFrom(){
+  if(window.PRES_CFG&&PRES_CFG.dateMode==='custom'&&PRES_CFG.from)return PRES_CFG.from;
+  return (window.PRES_CFG&&PRES_CFG.dateMode==='full')?((S.department||{}).range||{}).from||FROM:FROM;
+}
+function presLabelTo(){
+  if(window.PRES_CFG&&PRES_CFG.dateMode==='custom'&&PRES_CFG.to)return PRES_CFG.to;
+  return (window.PRES_CFG&&PRES_CFG.dateMode==='full')?((S.department||{}).range||{}).to||TO:TO;
+}
+function presProjCommits(slug){
+  var det=(S.projects_detail||{})[slug];
+  return presFilt((det&&det.commits_by_day)||[]).reduce(function(a,d){return a+(d.commits||0);},0);
+}
+function presPersonCommits(person){
+  var pd=(S.persons_detail||{})[person];
+  return presFilt((pd&&pd.commits_by_day)||[]).reduce(function(a,d){return a+(d.commits||0);},0);
+}
 
 // serie diaria FILTRADA por seleccion (suma projects_detail); fallback dept si no hay detalle
 function presDays(projs){
   var agg={},any=false;
   projs.forEach(function(p){
     var det=(S.projects_detail||{})[p.slug];
-    ((det&&det.commits_by_day)||[]).forEach(function(d){
+    presFilt((det&&det.commits_by_day)||[]).forEach(function(d){
       agg[d.date]=(agg[d.date]||0)+(d.commits||0);any=true;});
   });
-  if(!any)return ((S.department||{}).commits_by_day)||[];
+  if(!any)return presFilt(((S.department||{}).commits_by_day)||[]);
   return Object.keys(agg).sort().map(function(k){return {date:k,commits:agg[k]};});
 }
 
@@ -36,7 +71,7 @@ function buildScenes(){
     // 1 — Intro
     function(){return '<div class="pscene"><div class="p-logo p-pulse">'+B.logo+'</div>'+
       '<div class="p-h1 p-in">'+B.title+'</div>'+
-      '<div class="p-sub p-in" style="--d:.25s">'+(B.org?B.org+' · ':'')+(dept.range&&dept.range.from||'')+' — '+(dept.range&&dept.range.to||'')+'</div></div>';},
+      '<div class="p-sub p-in" style="--d:.25s">'+(B.org?B.org+' · ':'')+presLabelFrom()+' — '+presLabelTo()+'</div></div>';},
     // 2 — Pulso (heatmap filtrado)
     function(){
       if(!days.length)return '<div class="pscene"><div class="p-ey">Sin actividad en la seleccion</div></div>';
@@ -61,17 +96,17 @@ function buildScenes(){
         (Object.keys(filtPf.by_classification||{}).length
           ? '<div id="pgDonut" style="width:46vw;height:56vh"></div>'
           : '')+
-        '<div class="p-people">'+(contribs.length?contribs.slice(0,6).map(function(c,i){return '<div class="p-person p-in" style="--d:'+(0.12*i)+'s"><div class="av lg" style="width:48px;height:48px;font-size:16px">'+initials(c.person)+'</div><div><div style="font-family:var(--fd);font-weight:700;font-size:20px">'+c.person+'</div><div class="p-lab" style="margin:0">'+c.commits+' commits · '+c.repos+' repos</div></div></div>';}).join('')
+        '<div class="p-people">'+(contribs.length?contribs.slice(0,6).map(function(c,i){return '<div class="p-person p-in" style="--d:'+(0.12*i)+'s"><div class="av lg" style="width:48px;height:48px;font-size:16px">'+initials(c.person)+'</div><div><div style="font-family:var(--fd);font-weight:700;font-size:20px">'+c.person+'</div><div class="p-lab" style="margin:0">'+presPersonCommits(c.person)+' commits · '+c.repos+' repos</div></div></div>';}).join('')
           :'<div class="p-lab">Equipo no seleccionado</div>')+'</div></div></div>';},
     // 6 — Proyectos (grid fluido, sin scroll)
-    function(){var dense=projs.length>6?' dense':'';
-      return '<div class="pscene" style="width:100%"><div class="p-ey p-in">Proyectos en marcha</div><div class="p-pcards'+dense+'">'+
+    function(){var gridClass=presProjectGridClass(projs.length);
+      return '<div class="pscene pscene-projects" style="width:100%"><div class="p-ey p-in">Proyectos en marcha</div><div class="p-pcards'+gridClass+'">'+
       (projs.length?projs.map(function(p,i){var rp=realPct(p),c=CM[p.slug]||'#606060';
         return '<div class="p-pcard p-in" style="--d:'+(0.1*i)+'s;border-top:3px solid '+c+'">'+
         '<div class="p-pc-name">'+p.slug+'</div>'+
         '<div class="p-pc-mvp" style="color:'+c+'" data-to="'+rp+'" data-suffix="%">0%</div>'+
         '<div class="p-bar"><i data-w="'+rp+'" style="background:'+c+'"></i></div>'+
-        '<div style="font-size:14px;color:#A1A1AA;margin-top:8px">Fase '+p.fase+' · '+p.commits_7d+' commits/sem</div></div>';}).join('')
+        '<div style="font-size:14px;color:#A1A1AA;margin-top:8px">Fase '+p.fase+' · '+presProjCommits(p.slug)+' commits</div></div>';}).join('')
       :'<div class="p-lab">Sin proyectos en marcha</div>')+'</div></div>';},
     // 7 — Momentum (commits/sem por proyecto)
     function(){return '<div class="pscene" style="width:100%">'+
@@ -161,6 +196,13 @@ function renderPScene(){
   if(PIDX===3){
     var filtAct=filteredActivity();
     if(filtAct.edges&&filtAct.edges.length){
+      filtAct.repos=(filtAct.repos||[]).map(function(r){
+        var slug=r.project||r.repo;
+        return Object.assign({},r,{commits:presProjCommits(slug)});
+      });
+      filtAct.contributors=(filtAct.contributors||[]).map(function(c){
+        return Object.assign({},c,{commits:presPersonCommits(c.person||c.name||c.id)});
+      });
       var g=pMk('pgGraph',graphOption(filtAct,true));
       if(g){attachGraphHover(g);attachSpotlight(g);}
     }
@@ -175,12 +217,12 @@ function renderPScene(){
   }
   // escena 7: momentum bars
   if(PIDX===6&&projs.length){
-    var sorted=projs.slice().sort(function(a,b){return (a.commits_7d||0)-(b.commits_7d||0);});
+    var sorted=projs.slice().sort(function(a,b){return presProjCommits(a.slug)-presProjCommits(b.slug);});
     pMk('pgBars',{grid:{left:8,right:60,top:8,bottom:8,containLabel:true},
       xAxis:{type:'value',splitLine:{lineStyle:GRID},axisLabel:AXIS},
       yAxis:{type:'category',data:sorted.map(function(p){return p.slug;}),
         axisLabel:Object.assign({},AXIS,{color:'#FAFAFA',fontSize:14,fontWeight:600}),axisLine:{show:false},axisTick:{show:false}},
-      series:[{type:'bar',data:sorted.map(function(p){return {value:p.commits_7d||0,itemStyle:{color:CM[p.slug]||'#606060',borderRadius:[0,6,6,0]}};}),
+      series:[{type:'bar',data:sorted.map(function(p){return {value:presProjCommits(p.slug),itemStyle:{color:CM[p.slug]||'#606060',borderRadius:[0,6,6,0]}};}),
         barMaxWidth:26,label:{show:true,position:'right',color:'#FAFAFA',fontFamily:'JetBrains Mono',fontWeight:700,fontSize:14},
         animationDelay:function(i){return i*120;}}],
       animationDuration:700,animationEasing:'cubicOut'});

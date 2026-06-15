@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-dept="generic">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Department Observatory</title>
+<!--
+  DASHBOARD TEMPLATE — sanitized shell for universal departmental observatory.
+  NO organization-specific references. All branding via window.DEPT_PROFILE.
+  Claude adapts this by setting DEPT_PROFILE before init().
+
+  CDN versions pinned. Verify before updating:
+    echarts:  https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js
+    snapdom:  https://cdn.jsdelivr.net/npm/@zumer/snapdom@2.12.8/dist/snapdom.min.js
+    fonts:    https://fonts.google.com (Space Grotesk + Inter + JetBrains Mono)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zumer/snapdom@2.12.8/dist/snapdom.min.js"></script>
+<style>
+/* Inline tokens + components injected by build_dashboard.py */
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+  <div class="brand">
+    <div class="logo" id="brand-logo">IO</div>
+    <div><div class="brand-t" id="brand-title">Observatory</div>
+    <div class="brand-s" id="brand-sub">Department Intelligence</div></div>
+  </div>
+  <nav>
+    <div class="nav-item on" data-route="overview" onclick="go('overview')"><span class="ic">&#9671;</span>Overview</div>
+    <div class="nav-item" data-route="activity" onclick="go('activity')"><span class="ic">&#9670;</span>Activity</div>
+    <div class="nav-item" data-route="project" onclick="go('project')"><span class="ic">&#9672;</span>Project</div>
+    <div class="nav-item" data-route="person" onclick="go('person')"><span class="ic">&#9673;</span>Person</div>
+    <div class="nav-item" data-route="presentation" onclick="openPresConfig()"><span class="ic">&#9654;</span>Presentation</div>
+  </nav>
+  <div class="nav-section" style="padding-top:18px">Projects</div>
+  <div id="aside-projects" style="display:flex;flex-direction:column;gap:2px;min-height:0;overflow-y:auto"></div>
+  <div class="nav-section" style="margin-top:12px">Team</div>
+  <div id="aside-persons" style="display:flex;flex-direction:column;gap:2px;min-height:0;overflow-y:auto"></div>
+</aside>
+<main>
+  <div class="topbar">
+    <span class="topbar-title" id="tbar-title">Department</span>
+    <span class="spacer"></span>
+    <span id="expmsg" style="font-size:11px;color:var(--t2);margin-right:6px"></span>
+    <div class="drpills">
+      <span class="drpill on" data-d="7" onclick="setRange(7)">7d</span>
+      <span class="drpill" data-d="30" onclick="setRange(30)">30d</span>
+      <span class="drpill" data-d="60" onclick="setRange(60)">60d</span>
+      <span class="drpill" data-d="90" onclick="setRange(90)">90d</span>
+    </div>
+    <input type="date" class="dinput" id="dFrom" onchange="setCustom()">
+    <span style="color:var(--t3)">–</span>
+    <input type="date" class="dinput" id="dTo" onchange="setCustom()">
+    <div class="vbar" id="tbar-verdict"></div>
+    <button class="btn" id="syncBtn" disabled onclick="if(typeof startRefresh==='function')startRefresh()" title="Refresh (requires server)">&#8635; Refresh</button>
+    <button class="btn prim" onclick="exportImg('both')" title="Export PNG desktop + mobile (snapdom)">Export</button>
+    <button class="btn" onclick="openConfig()" title="Project config">&#9881;</button>
+  </div>
+  <div class="accent"></div>
+  <div id="app" style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;flex:1;max-width:1440px;width:100%;margin:0 auto"></div>
+</main>
+</div>
+
+<!-- Config modal -->
+<div id="cfgModal" class="modal"><div class="modal-box" style="width:660px;max-height:80vh;overflow-y:auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <span class="ey" style="margin:0">Project config</span>
+  <button class="btn sm" onclick="closeConfig()">&times;</button>
+</div>
+<div id="cfg-list"></div>
+</div></div>
+
+<!-- Expand modal -->
+<div id="expModal" class="modal"><div class="modal-box" style="width:980px;max-height:90vh;overflow-y:auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <span class="ey" style="margin:0" id="expTitle"></span>
+  <button class="btn sm" onclick="closeExp()">&times;</button>
+</div>
+<div id="expBody"></div>
+</div></div>
+
+<!-- Donut slice modal -->
+<div id="sliceModal" class="modal"><div class="modal-box" style="width:420px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <span class="ey" style="margin:0" id="sliceTitle"></span>
+  <button class="btn sm" onclick="closeSlice()">&times;</button>
+</div>
+<div id="sliceBody"></div>
+</div></div>
+
+<!-- Sync progress overlay -->
+<div id="syncOverlay" class="sync-overlay" style="display:none">
+  <div class="sync-card">
+    <div class="sync-h">&#8635; Syncing data...</div>
+    <div id="syncProgress" class="sync-progress"><div class="sync-bar" id="syncBar"></div></div>
+    <div id="syncDots" class="sync-dots"></div>
+    <div id="syncLog" class="sync-log"></div>
+  </div>
+</div>
+
+<!-- PRES_BRAND placeholder — presentation reads from DEPT_PROFILE if available -->
+<script>
+window.PRES_BRAND = null; // set via DEPT_PROFILE or inline override
+</script>
+
+<script>
+/* Inline JS bundle injected by build_dashboard.py */
+</script>
+</body>
+</html>

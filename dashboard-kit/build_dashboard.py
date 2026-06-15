@@ -2,13 +2,20 @@
 """Build dashboard.html from source/ modules.
 
 Usage:
-  python3 build_dashboard.py          # build dashboard.html
-  python3 build_dashboard.py --check  # node --check on JS bundle, no write
+  python3 build_dashboard.py                        # build dashboard.html
+  python3 build_dashboard.py --check                # node --check on JS bundle, no write
+  python3 build_dashboard.py --profile profiles/sales.js  # inject DEPT_PROFILE
+
+The build reads a dashboard.template.html shell and injects CSS + JS.
+Set DASHBOARD_TEMPLATE env var to use a different template.
+Use --profile to inject a department profile before the JS bundle.
 """
-import sys, subprocess, pathlib
+
+import sys, subprocess, pathlib, json, os
 
 HERE = pathlib.Path(__file__).parent
 SRC  = HERE / 'source'
+TEMPLATE = pathlib.Path(os.environ.get('DASHBOARD_TEMPLATE', str(SRC / 'dashboard.template.html')))
 OUT  = HERE / 'dashboard.html'
 
 CSS_ORDER = [
@@ -16,23 +23,33 @@ CSS_ORDER = [
     SRC / 'components.css',
 ]
 
-# Order matters: dependencies must precede dependents
+# Order matters: dependencies must precede dependents.
+# config/defaults.js MUST be first — provides profile resolution layer.
 JS_ORDER = [
+    SRC / 'config' / 'defaults.js',
     SRC / 'kpi-utils.js',
     SRC / 'core' / 'chart-kit.js',
     SRC / 'modal-kit.js',
     SRC / 'overlay-kit.js',
     SRC / 'pres-config-kit.js',
     SRC / 'presentation-engine.js',
-    SRC / 'data-render.example.js',  # Replace with your own data-render.js
+    SRC / 'data-render.js',  # your department-specific renderer
 ]
 
+# Fallback: if data-render.js doesn't exist, use the example
+if not JS_ORDER[-1].exists():
+    JS_ORDER[-1] = SRC / 'data-render.example.js'
+
 _HEADER = '<!-- GENERATED -- edit source/ files and run build_dashboard.py to rebuild -->\n'
+_PROFILE_SCRIPT_TEMPLATE = '<script>\n/* Injected department profile */\nwindow.DEPT_PROFILE = {data};\n</script>\n'
 
 
 def _concat(files):
     parts = []
     for f in files:
+        if not f.exists():
+            print(f'WARNING: skipping missing {f.name}', file=sys.stderr)
+            continue
         parts.append(f'/* ===== {f.name} ===== */\n')
         parts.append(f.read_text(encoding='utf-8').rstrip())
         parts.append('\n')
@@ -40,19 +57,27 @@ def _concat(files):
 
 
 def _inject_css(html, css):
-    start = html.index('<style>') + len('<style>')
-    end   = html.index('</style>')
-    return html[:start] + '\n' + css + '\n' + html[end:]
+    idx = html.index('<style>') + len('<style>')
+    end = html.index('</style>')
+    return html[:idx] + '\n' + css + '\n' + html[end:]
 
 
 def _inject_js(html, js):
-    # Target the LAST <script> block (inline, not CDN)
-    last_open  = html.rfind('<script>')
+    last_open = html.rfind('<script>')
     last_close = html.rfind('</script>')
     if last_open == -1 or last_close == -1 or last_open > last_close:
-        raise ValueError('inline <script> block not found in dashboard.html')
+        raise ValueError('inline <script> block not found in template')
     start = last_open + len('<script>')
     return html[:start] + '\n' + js + '\n' + html[last_close:]
+
+
+def _inject_profile(html, profile_data):
+    """Inject window.DEPT_PROFILE = {...} before the JS bundle."""
+    script_tag = _PROFILE_SCRIPT_TEMPLATE.format(data=json.dumps(profile_data, indent=2))
+    last_open = html.rfind('<script>')
+    if last_open == -1:
+        return script_tag + '\n' + html
+    return html[:last_open] + script_tag + '\n' + html[last_open:]
 
 
 def _add_header(html):
@@ -61,9 +86,9 @@ def _add_header(html):
     return html.replace('<!doctype html>\n', '<!doctype html>\n' + _HEADER, 1)
 
 
-def build(check=False):
-    # Verify all source files exist
-    missing = [f for f in CSS_ORDER + JS_ORDER if not f.exists()]
+def build(check=False, profile_path=None):
+    # Verify all source files exist (warn only for missing optional files)
+    missing = [f for f in CSS_ORDER + JS_ORDER[:-1] if not f.exists()]
     if missing:
         for f in missing:
             print(f'MISSING: {f}', file=sys.stderr)
@@ -87,11 +112,25 @@ def build(check=False):
                 tmp.unlink()
         return
 
-    if not OUT.exists():
-        print(f'ERROR: {OUT} not found. Create a dashboard.html shell first.', file=sys.stderr)
+    if not TEMPLATE.exists():
+        print(f'ERROR: template not found: {TEMPLATE}', file=sys.stderr)
+        print('Create a dashboard.template.html shell first, or set DASHBOARD_TEMPLATE env var.', file=sys.stderr)
         sys.exit(1)
 
-    html = OUT.read_text(encoding='utf-8')
+    html = TEMPLATE.read_text(encoding='utf-8')
+
+    # Inject department profile if provided
+    if profile_path:
+        profile_file = pathlib.Path(profile_path)
+        if not profile_file.is_absolute():
+            profile_file = HERE / profile_file
+        if profile_file.exists():
+            profile_data = json.loads(profile_file.read_text(encoding='utf-8'))
+            html = _inject_profile(html, profile_data)
+            print(f'Profile injected: {profile_file.name}')
+        else:
+            print(f'WARNING: profile not found: {profile_file}', file=sys.stderr)
+
     html = _inject_css(html, css)
     html = _inject_js(html, js)
     html = _add_header(html)
@@ -101,4 +140,9 @@ def build(check=False):
 
 
 if __name__ == '__main__':
-    build(check='--check' in sys.argv)
+    profile_arg = None
+    args = [a for a in sys.argv[1:] if not a.startswith('--profile=')]
+    for a in sys.argv[1:]:
+        if a.startswith('--profile='):
+            profile_arg = a.split('=', 1)[1]
+    build(check='--check' in sys.argv, profile_path=profile_arg)
