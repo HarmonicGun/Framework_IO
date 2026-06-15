@@ -136,6 +136,23 @@ def build(check=False, profile_path=None):
     html = _add_header(html)
     OUT.write_text(html, encoding='utf-8')
     lines = len(html.splitlines())
+
+    # Copy fonts to output directory (self-hosted, zero CDN dependency)
+    fonts_src = SRC / 'fonts'
+    fonts_dst = HERE / 'fonts'
+    fonts_css_src = SRC / 'fonts.css'
+    fonts_css_dst = HERE / 'fonts.css'
+    if fonts_src.exists() and fonts_src.is_dir():
+        import shutil
+        if fonts_dst.exists():
+            shutil.rmtree(fonts_dst)
+        shutil.copytree(fonts_src, fonts_dst)
+        print(f'Fonts: {len(list(fonts_dst.iterdir()))} files copied')
+    if fonts_css_src.exists():
+        import shutil
+        shutil.copy2(fonts_css_src, fonts_css_dst)
+        print('fonts.css copied')
+
     print(f'Built: {OUT.name} ({lines} lines)')
 
 
