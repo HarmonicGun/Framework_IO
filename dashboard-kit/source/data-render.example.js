@@ -183,6 +183,7 @@ function renderCurrent(){
     if(ROUTE==='overview')renderOverview();
     else if(ROUTE==='project')renderProject(ROUTE_ARG);
     else if(ROUTE==='person')renderPerson(ROUTE_ARG);
+    else if(ROUTE==='gastos' && typeof renderGastos === 'function')renderGastos();
     else if(ROUTE==='activity')renderActivity();
   }catch(e){document.getElementById('app').innerHTML='<pre style="color:#E53E3E;padding:20px;font-size:11px">ERROR '+ROUTE+':\n'+e.message+'</pre>';}
 }
