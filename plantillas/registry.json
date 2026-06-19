@@ -1,64 +1,54 @@
 {
-  "_schema": "1.2",
+  "_schema": "1.1",
   "_descripcion": "Registro estructurado de proyectos del portafolio. Se actualiza cada viernes. Incluye historial para acumulacion mensual de KPIs.",
-  "_ultima_actualizacion": "",
-  "departamento": "",
-  "proyectos": {
-    "proyecto-ejemplo": {
-      "nombre": "Proyecto Ejemplo",
-      "carpeta": "proyecto_ejemplo",
-      "owner": "",
-      "short_name": "Ejemplo",
-      "clasificacion": "Desarrollo activo",
-      "fase": 0,
-      "estado": "Activo",
-      "semaforo": "Verde",
+  "_ultima_actualizacion": "{{FECHA}}",
+  "departamento": "{{NOMBRE_DEPARTAMENTO}}",
+  "proyectos": [
+    {
+      "id": "{{ID_1}}",
+      "nombre": "{{NOMBRE_1}}",
+      "carpeta": "{{CARPETA_1}}",
+      "owner": "{{OWNER_1}}",
+      "clasificacion": "{{CLASIFICACION_1}}",
+      "fase": {{FASE_1}},
+      "estado": "{{ESTADO_1}}",
+      "semaforo": "{{SEMAFORO_1}}",
       "prioridad": 1,
-      "%_mvp": 0,
-      "ultima_evidencia": "",
-      "bloqueo_principal": "",
-      "notas": "",
+      "%_mvp": {{MVP_1}},
+      "ultima_evidencia": "{{EVIDENCIA_1}}",
+      "bloqueo_principal": "{{BLOQUEO_1}}",
+      "notas": "{{NOTAS_1}}",
       "historial_kpi": [
         {
-          "semana": "",
-          "%_mvp": 0,
+          "semana": "{{SEMANA_ACTUAL}}",
+          "%_mvp": {{MVP_1}},
           "flujos_implementados": 0,
           "flujos_testeados": 0,
-          "semaforo": "Verde",
-          "bloqueo": "",
-          "tokens_entrada": 0,
-          "tokens_salida": 0,
-          "modelo_principal": ""
+          "semaforo": "{{SEMAFORO_1}}",
+          "bloqueo": "{{BLOQUEO_1}}"
         }
       ],
       "dias_sin_actividad": 0,
-      "ultima_entrada_diario": "",
-      "metricas_agentes": {
-        "tokens_entrada": 0,
-        "tokens_salida": 0,
-        "subagent_exitosos": 0,
-        "subagent_fallidos": 0,
-        "costo_estimado": 0.0
-      }
+      "ultima_entrada_diario": "{{FECHA}}"
     }
-  },
+  ],
   "metricas_departamento": {
-    "total_proyectos": 1,
-    "activos": 1,
-    "en_produccion": 0,
-    "en_desarrollo": 0,
-    "bloqueados": 0,
+    "total_proyectos": {{TOTAL}},
+    "activos": {{ACTIVOS}},
+    "en_produccion": {{EN_PRODUCCION}},
+    "en_desarrollo": {{EN_DESARROLLO}},
+    "bloqueados": {{BLOQUEADOS}},
     "zombies": 0,
     "historial_semanal": [
       {
-        "semana": "",
-        "total_proyectos": 1,
-        "activos": 1,
-        "verdes": 1,
+        "semana": "{{SEMANA_ACTUAL}}",
+        "total_proyectos": {{TOTAL}},
+        "activos": {{ACTIVOS}},
+        "verdes": 0,
         "amarillos": 0,
         "rojos": 0,
         "zombies": 0,
-        "fecha_reporte": ""
+        "fecha_reporte": "{{FECHA}}"
       }
     ]
   }

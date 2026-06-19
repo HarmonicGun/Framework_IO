@@ -1,6 +1,6 @@
 # Seguimiento — [NOMBRE_PROYECTO]
 
-> Backlog y riesgos.
+> Backlog, riesgos y log diario en un solo archivo.
 
 ---
 
@@ -51,6 +51,21 @@ Referencia commits, no pegues diffs. Escribe rutas de endpoints sin host.
 1. [Riesgo mas grave]
 2. [Segundo]
 3. [Tercero]
+
+---
+
+## 3. AVANCES DIARIOS
+
+> Owner: [NOMBRE] · Inicio: [FECHA]
+
+### [DIA] DD/MM — [Titulo]
+
+**Que hice:** [1-2 acciones]
+**Evidencia:** [commit `hash` | test `X` | endpoint `POST /x`]
+**MVP:** [X]% (entregable [N]/[TOTAL])
+**Bloqueo:** [ninguno / descripcion]
+**Siguiente:** [1 frase]
+**Semaforo:** Verde/Amarillo/Rojo
 
 ---
 

@@ -29,13 +29,30 @@
 
 ## 3. Decisiones clave
 
-| Fecha | Decision | Por que | Alternativas descartadas | Regla |
-|---|---|---|---|---|
-| [DD/MM] | [Decision] | [Razon] | [Que se descarto y por que] | [Regla derivada si aplica] |
+| Fecha | Decision | Por que |
+|---|---|---|
+| [DD/MM] | [Decision] | [Razon] |
 
 ---
 
-## 4. Metrica semanal
+## 4. MVP Breakdown
+
+> Formula: `% MVP = completados / total * 100`
+
+| # | Entregable | Descripcion | Estado | Evidencia |
+|---|---|---|---|---|
+| 1 | [Nombre] | [1 frase] | Pendiente / Hecho | [commit/PR] |
+
+- **Completados:** [N] de [TOTAL]
+- **% MVP real:** [X]%
+- **Ultimo cerrado:** #[N] — [fecha]
+- **Siguiente:** #[N+1] — [nombre]
+
+**Definition of Done:** codigo funciona + tests pasan + evidencia en avances_diarios.md + owner confirma.
+
+---
+
+## 5. Metrica semanal
 
 | Metrica | Valor |
 |---|---|
@@ -47,10 +64,6 @@
 | Bloqueo activo | [si/no — cual] |
 
 ---
-
-## 5. Lo que NO se debe hacer
-
-- [Prohibicion concreta — que no hacer y por que]
 
 ## 6. Deuda tecnica
 
