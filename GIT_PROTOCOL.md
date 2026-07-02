@@ -1,182 +1,186 @@
-# GIT_PROTOCOL — verificacion obligatoria antes de tocar git
+# GIT_PROTOCOL — integrar sin perder NADA (anti-desastre)
 
-> Regla nacida de un incidente real. Un agente trato TODOS los repos
-> como si fueran del mismo dueno, commiteo con `git add -A`, pusheo a master de repos ajenos
-> y mergeo a ciegas. Casi destruye semanas de trabajo de varios ingenieros.
-> Esto NO se vuelve a repetir. El hook `pre-push` (git-guard) lo bloquea mecanicamente.
+> Nacido de desastres reales: (1) `git branch -f rama master` / "Reset to master" huerfano commits
+> de un ingeniero; (2) alguien commiteo local y NO pusheo -> casi se pierde un dia; (3) ramas
+> divergieron -> tentacion de force; (4) merge resolvio al lado equivocado. Este protocolo existe
+> para que eso NO se repita. El hook `git-guard` lo refuerza mecanicamente.
 
-## REGLA 0 — Verificar antes de ejecutar. Siempre.
+## PRINCIPIO 0 — el trabajo solo existe cuando esta en origin
 
-Antes de CUALQUIER commit / push / merge / pull:
+Trabajo en UN solo lugar (disco local) = riesgo de perdida total. Regla raiz:
+**push primero, mover punteros despues.** Nada se integra, alinea ni resetea si no esta en `origin`.
+Push diario obligatorio al cerrar.
 
-1. `git status` y `git log --oneline -5`. Saber donde estas.
-2. Leer `OWNERS.md` (raiz del portafolio). Saber DE QUIEN es el repo.
-3. Si una operacion remota falla (rejected, diverged) => PARAR y reportar al usuario. NUNCA jalar+mergear a ciegas para "arreglarlo".
+## La regla de oro
 
-## REGLA 1 — El integrador integra master, cada owner/colab en SU rama
+```
+Las ramas SUBEN a master una por una (merge, conflictos resueltos hunk por hunk),
+LUEGO master BAJA a las ramas (fast-forward puro),
+LUEGO master baja a los locales (ff-only).
+Nunca al reves. Nunca con force. Nunca con reset. Nunca a ciegas.
+```
 
-- El integrador esta a cargo: su maquina (la que declara `OPERADOR_MAQUINA == INTEGRADOR_MASTER` en OWNERS.md) pushea master/main en TODOS los repos. **Excepcion:** un repo cuyo owner controla su propio master, segun OWNERS.md.
-- Cada owner (que no sea el integrador) y cada colaborador trabaja SIEMPRE en SU propia rama, nunca en master. Una rama por persona, nombrada por convencion (ver `OWNERS.md`). Cada rama parte del master mas reciente.
-- El integrador mergea las ramas a master para alinear avances (los equipos trabajan cosas separadas). El agente NO pushea a master por su cuenta: solo cuando el integrador lo pide explicito.
-- La tabla de owners/ramas en `OWNERS.md` es la referencia. Lo que autoriza el push a master es `OPERADOR_MAQUINA`/`INTEGRADOR_MASTER`.
+---
 
-## REGLA 2 — Nada de `git add -A` / `git add .`
+## PROCEDIMIENTO OFICIAL DE INTEGRACION (FASE 0 -> 6)
 
-Agregar siempre rutas explicitas (`git add archivo1 archivo2`). `git add -A` arrastra basura untracked (planes, temporales, .venv). Prohibido salvo que el usuario lo pida explicito y revises `git status` antes.
+### FASE 0 — Freeze + identidad + entorno
+- Anunciar ventana de integracion. Durante ella NINGUN ingeniero pushea/pullea/mergea-master.
+- Un solo integrador toca master a la vez. Tomar lock: `git push origin HEAD:refs/heads/lock-master` (si falla = otro lo tiene; esperar).
+- Integrar desde un clon FUERA de cualquier carpeta sincronizada (Drive/Dropbox), o pausar la sync toda la ventana (el `.git` sincronizado se corrompe a media operacion).
+- Por clon: `git config operador.maquina "<Nombre exacto de OWNERS.md>"`, drivers de merge requeridos, hook `pre-push` presente y self-test verde. En Windows: `git config core.autocrlf input`.
 
-## REGLA 3 — Nunca pull-merge a ciegas
+### FASE 1 — Gate de PUSHED (cada ingeniero en SU clon)
+```bash
+git status                                  # working tree limpio
+git add <rutas explicitas>                  # NUNCA git add -A / git add .
+git commit -m "..."
+git push origin <su-rama>
+git log origin/<su-rama>..HEAD --oneline    # DEBE salir VACIO
+```
+Vacio = todo subido. El integrador NO arranca hasta que TODAS las ramas confirmen y `git fetch` muestre cada `origin/<rama>` avanzada. El integrador no ve commits locales: depende de este push.
 
-Si `git push` es rechazado: NO hagas `git pull` automatico.
-Primero `git fetch` + `git log origin/<branch>` para ver QUE trae el remoto.
-Reportar al usuario el estado divergente. El merge ciego crea commits-basura y mezcla trabajo ajeno.
+### FASE 2 — Red de seguridad (integrador)
+```bash
+git fetch --all --prune --tags
+TS=$(date +%Y%m%d-%H%M%S)
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master)$'); do
+  git tag "pre-integracion/$r-$TS" "origin/$r"
+  git rev-parse "pre-integracion/$r-$TS" >/dev/null || { echo "TAG FALLO $r"; exit 1; }
+  git push origin "pre-integracion/$r-$TS"          # los tags se PUSHEAN: el reflog es local
+done
+git bundle create "$HOME/<repo>_$TS.bundle" --all && git bundle verify "$HOME/<repo>_$TS.bundle"
+```
+Tag fija el tip aunque luego se mueva el puntero. Bundle saca el trabajo del disco unico.
 
-## REGLA 4 — Force-push = decision humana
+### FASE 3 — Integrar ramas -> master, UNA A LA VEZ (mas adelantada primero)
+Por cada rama `B` de la lista dinamica:
+```bash
+git fetch origin B
+SHA=$(git rev-parse origin/B)               # FIJAR el SHA; trabajar por SHA (anti-carrera)
+git log master..$SHA --oneline              # que aporta B
+git log $SHA..master --oneline              # que le falta (si ambos traen algo = divergido)
+git merge-tree --write-tree master $SHA >/dev/null && echo "dry-run sin conflicto" || echo "habra conflicto"
+git merge --no-ff "$SHA" -m "integra B (<desc>) a master"
+#   conflicto: UNION hunk por hunk (R4). git add <rutas explicitas>. suite verde.
+git log "$SHA"..origin/B --oneline          # re-fetch: si llegaron commits en la carrera, integrarlos
+git log master..origin/B --oneline          # VERIFICACION: DEBE quedar VACIO
+git push origin master                      # FF; non-ff = otro movio master -> re-fetch+merge, NUNCA -f
+```
+Entregar la verificacion de `B` ANTES de la siguiente. TODAS las ramas se integran antes de cualquier replica.
 
-`git push --force` / `--force-with-lease` reescribe historia remota. Puede destruir trabajo de otros.
-Prohibido sin confirmacion explicita del usuario para ESE repo.
-Antes de cualquier reset destructivo: poner tag de seguridad `git tag safety-pre<operacion>-<hash> HEAD`.
+### FASE 4 — Replicar master -> cada rama (FF puro)
+```bash
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master)$'); do
+  git log origin/master..origin/$r --oneline   # DEBE estar vacio
+  git push origin master:$r                     # FF, SIN -f. Nombre EXACTO de for-each-ref
+done                                            # non-ff -> esa rama tiene trabajo sin integrar -> FASE 3
+```
 
-## REGLA 5 — Verificar despues
+### FASE 5 — Locales al final
+- Cada ingeniero: `git merge --ff-only origin/<su-rama>`.
+- El integrador en su local: `git pull --ff-only` de ULTIMO.
 
-Tras push: `git log --oneline -1` local y `origin/<rama>` deben coincidir.
-Confirmar que NO se perdio trabajo de nadie.
+### FASE 6 — Cierre (prueba de cero perdida)
+```bash
+for t in $(git tag -l "pre-integracion/*-$TS"); do echo "== $t =="; git log --oneline "master..$t"; done
+#   ^ TODO debe salir VACIO. Ningun autor debe desaparecer. Suite verde.
+```
+Soltar lock, reanudar sync, declarar ventana cerrada. No borrar tags/bundle sin visto bueno.
 
-## REGLA 6 — Sincronizacion de ramas (OBLIGATORIA)
+---
 
-Objetivo: toda rama en sincronia con su master, mitigando choques de cambios. Orden estricto:
+## FLUJO DIARIO DEL INGENIERO (pull / push de TU rama, sin perder local)
 
-1. **Ramas -> master, una por una.** Si una rama tiene commits unicos/mejoras, se integra a master. Si hay varias ramas con cambios, primero una y LUEGO la otra (secuencial, nunca en paralelo). Antes de cada merge: tag de seguridad y precheck de conflicto (`git merge-tree`). Conflicto => PARAR y reportar.
-2. **Master -> ramas.** Despues de integrar, alinear cada rama del repo con master (`git push origin master:<rama>`, fast-forward). Asi todas parten del mismo punto.
-3. **Master -> local.** Al final, alinear el local con master (`git pull --ff-only`). El local se actualiza de ULTIMO, ya con master consolidado.
+Aplica PRINCIPIO 0 + R1/R3/R8. NUNCA `git pull` pelado, NUNCA reset/force, NUNCA tocar master.
 
-Regla de oro del orden: ramas suben primero (una a una) -> luego master baja a las ramas -> luego master baja al local. Nunca al reves.
+### "haz pull de mi rama" (despues de que el integrador sincronizo)
+Bajar lo nuevo SIN borrar lo local; el resultado (local + lo nuevo) se commitea como punto de partida.
+```bash
+git status
+git stash -u                                # si hay cambios sin commitear (incluye untracked)
+git fetch origin
+git merge --ff-only origin/<TU-RAMA> 2>/dev/null \
+  || git merge --no-ff origin/<TU-RAMA> -m "merge: sync de master en <TU-RAMA>"   # divergida: merge, conserva ambos
+git stash pop                                # resolver conflicto a UNION (ambos lados)
+git add <rutas explicitas> && git commit -m "chore: punto de partida tras sync (local + master)"
+```
+Si `merge --ff-only` pasa, estabas limpio detras de origin. Si falla, tu rama tenia trabajo -> merge (no reset) lo une. Conflicto = conservar AMBOS lados.
 
-Higiene previa: rama de quien NO es owner ni colaborador del repo, sin commits unicos, se borra (con backup `git bundle`). Si tiene trabajo unico, no se borra: se integra o se marca al usuario.
+### "haz push a mi rama" (respetando el sync)
+Solo a TU rama, jamas master. Si origin avanzo, integrar ANTES de pushear.
+```bash
+git fetch origin
+git merge --ff-only origin/<TU-RAMA> 2>/dev/null \
+  || git merge --no-ff origin/<TU-RAMA> -m "merge: sync de master en <TU-RAMA>"
+git push origin <TU-RAMA>                     # FF; si non-ff -> re-fetch + re-merge, NUNCA -f
+```
 
-## REGLA 7 — Protocolo de sincronizacion multi-rama sin perder mejoras
+### ¿El integrador ya sincronizo?
+```bash
+git fetch origin && git log --oneline origin/<TU-RAMA>..origin/master   # vacio = tu rama ya tiene todo master
+```
+Si aun no, sigue commiteando normal a tu rama. Cuando avise "ya sincronice", corre el pull de arriba.
 
-Cuando una o mas ramas estan adelantadas a master con mejoras reales, seguir este orden exacto.
-Sin este orden se pierden commits o se mergea a ciegas y se destruye trabajo.
+---
 
-### Paso 1 — Diagnostico
+## REGLAS DURAS (cada una mata un desastre)
+
+**R1 — Push primero.** Commit local sin push se evapora si alguien mueve el puntero. Antes de alinear/resetear: `git log origin/<rama>..HEAD` VACIO.
+
+**R2 — CERO reset-to-master.** PROHIBIDO para "alinear": `git reset --hard master`, `git branch -f <rama> master`, `git checkout -B <rama> master`, GUI "Reset to master", `git push -f origin master:<rama>`. Alinear = SOLO `git merge --ff-only` o `git push origin master:<rama>` (FF). El FF que falla protege; el reset pisa.
+
+**R3 — Divergencia = merge, nunca force.** Rama y master avanzaron ambos: se unen SOLO con `git merge --no-ff` (2 padres = cero perdida). Nunca `git push -f`, nunca `git pull` pelado.
+
+**R4 — Conflicto = UNION hunk por hunk.** El archivo resuelto es SUPERSET de ambos lados. PROHIBIDO `-X ours/theirs` y `git checkout --ours/--theirs <archivo>` en bloque. Cerrar con suite verde.
+
+**R5 — Integracion por lease.** Re-fetch JUSTO antes de cada operacion; fijar `SHA=$(git rev-parse origin/B)` y mergear el SHA. Re-verificar carrera tras integrar.
+
+**R6 — Un integrador a la vez.** Serializar con lock + freeze. Push a master non-ff = el otro movio master: re-fetch + merge, NUNCA -f.
+
+**R7 — Replicar = FF puro.** `git push origin master:<rama>` sin -f. Rechazo non-ff = rama con trabajo sin integrar -> FASE 3.
+
+**R8 — Working dir sucio se materializa** (`git stash -u` / commit a rama WIP / bundle) antes de checkout/reset/pull/merge/rebase/clean.
+
+**R9 — El guard viaja con el repo.** Hook versionado en `.githooks/pre-push` + `core.hooksPath` o instalador dentro del repo. Ningun clon pushea master sin self-test verde + identidad configurada.
+
+**R10 — Pusheado = jamas rebase.** Solo se rebasea lo 100% local sin pushear. Verificar `git log origin/<rama>..HEAD`.
+
+**R11 — Tags y bundles SE PUSHEAN.** El reflog es local. `git push origin <tag>`. Nombres unicos (timestamp a segundo); verificar que se crearon.
+
+**R12 — Enumerar ramas dinamicamente; nombres EXACTOS.** `git for-each-ref refs/remotes/origin`, nunca lista hardcodeada ni teclear nombres (typos/case crean ramas fantasma).
+
+**R13 — Borrar rama = solo tras `git log master..origin/<rama>` VACIO + bundle.** `-D` borra aunque haya commits sin integrar.
+
+**R14 — Prohibida la reescritura de historial** (filter-repo/BFG/rebase de master/amend pusheado) sin protocolo propio + orden explicita: tag+bundle de master Y de cada rama, re-clonado del equipo despues.
+
+**R15 — No commitear bombas** (`*.db`/`*.sqlite`/backups/secretos): `.gitignore` + pre-commit. Fuerzan el rewrite que orfana ramas.
+
+**R16 — Normalizar fin de linea.** `.gitattributes` con `* text=auto eol=lf`; Windows `core.autocrlf input`.
+
+**R17 — Override = decision humana.** `GO_PUSH_OVERRIDE=1` / `GO_FORCE_OK=1` solo con orden explicita del responsable para ESE repo. El agente nunca los activa solo.
+
+---
+
+## Enforcement mecanico (git-guard v3)
+
+Hook `pre-push` en cada repo. Bloquea: push a `master`/`main` salvo identidad autorizada
+(`git config operador.maquina` coincide con `OPERADOR_MAQUINA` o un nombre de `INTEGRADOR_MASTER`
+—lista separada por comas— del `OWNERS.md` mas cercano, o el owner del repo); force/non-ff/borrado
+de branch. Auto-contenido: funciona en clones standalone. Para autorizar a un segundo integrador,
+agregarlo a `INTEGRADOR_MASTER` en OWNERS.md y que configure su `operador.maquina`.
 
 ```bash
-git fetch --all
-git log master..rama-A --oneline   # commits en rama-A que no estan en master
-git log rama-A..master --oneline   # commits en master que no estan en rama-A
+bash deploy/install-git-guard.sh        # o el instalador del framework
+git config operador.maquina "Tu Nombre Completo"
 ```
 
-Si ambos tienen commits exclusivos => ramas DIVERGIDAS (no fast-forward). Requiere merge 3-way.
-Si solo rama-A tiene commits => master es ancestro directo. Fast-forward posible.
-
-### Paso 2 — Detectar archivos solapados entre ramas
-
-Antes de mergear nada, identificar que archivos tocaron TODAS las ramas:
+## Recuperacion si algo ya se orfano
 
 ```bash
-git diff --name-only master...rama-A
-git diff --name-only master...rama-B
+git reflog show <rama> | head -40        # el tip viejo / "Reset to master"
+git fsck --lost-found                     # huerfanos
+git tag recuperacion/<rama>-<TS> <sha> && git push origin recuperacion/<rama>-<TS>
 ```
-
-Archivos en ambas listas = conflicto potencial. Marcarlos.
-
-### Paso 3 — Dry-run obligatorio (antes de tocar master)
-
-Nunca mergear a master sin dry-run si hay archivos solapados.
-
-```bash
-git checkout -b test-merge-dry-run rama-A
-git merge --no-commit --no-ff rama-B
-```
-
-Si hay conflictos: `git status` muestra "modificados por ambos".
-Inspeccionar cada conflicto: `grep -n "<<<<<<" archivo_conflicto`
-
-Decidir resolucion ANTES de ejecutar en master:
-- Guardar version correcta: `git checkout HEAD -- archivo` (conserva rama-A)
-- O aplicar theirs: `git checkout MERGE_HEAD -- archivo` (conserva rama-B)
-- Criterio: conservar la version mas completa. La que tiene mas funcionalidad/logica.
-
-Abortar test y limpiar:
-
-```bash
-git reset --hard HEAD
-git checkout master
-git branch -D test-merge-dry-run
-```
-
-### Paso 4 — Merge real en orden (una rama a la vez)
-
-**Primero la rama mas adelantada** (mas commits unicos). Si cabe fast-forward, usarlo:
-
-```bash
-git merge --ff-only rama-A   # solo si master es ancestro directo
-```
-
-Si no cabe FF:
-
-```bash
-git merge --no-ff rama-A -m "merge: rama-A -> master (YYYY-MM-DD) — descripcion"
-```
-
-**Luego la segunda rama.** Si hay conflicto conocido del dry-run, resolverlo igual:
-
-```bash
-git merge --no-ff rama-B -m "merge: rama-B -> master (YYYY-MM-DD) — descripcion"
-# conflicto esperado:
-git checkout HEAD -- archivo_conflicto   # conservar version correcta
-git add archivo_conflicto
-git commit
-```
-
-### Paso 5 — Push master
-
-```bash
-git push origin master
-```
-
-Verificar: `git log --oneline -3` debe mostrar los merge commits recien creados.
-
-### Paso 6 — Bajar master a todas las ramas (FF)
-
-Despues de consolidar master, alinear cada rama. Siempre fast-forward:
-
-```bash
-git checkout rama-A && git merge --ff-only master && git push origin rama-A
-git checkout rama-B && git merge --ff-only master && git push origin rama-B
-git checkout master
-```
-
-Si FF falla en una rama => esa rama tiene commits nuevos que no se mergearon. PARAR y reportar.
-
-### Regla de oro del orden
-
-```
-1. Diagnostico (fetch + log)
-2. Detectar solapamiento (diff --name-only)
-3. Dry-run en rama temporal (NO en master)
-4. Resolver conflictos con criterio (mas completo gana)
-5. Abortar dry-run, volver a master limpio
-6. Merge ramas -> master (una a una, mas adelantada primero)
-7. Push master
-8. FF master -> cada rama
-9. Push todas las ramas
-```
-
-**Nunca saltar el dry-run si hay archivos solapados. Una hora de dry-run evita dias de recuperacion.**
-
-## Enforcement mecanico (git-guard)
-
-El hook `pre-push` instalado en cada repo bloquea automaticamente:
-
-- Push a master/main si la maquina NO es la del integrador (`OPERADOR_MAQUINA` en OWNERS.md no coincide con `INTEGRADOR_MASTER`, o no hay OWNERS.md). Override consciente: `GO_PUSH_OVERRIDE=1`.
-- Force / non-fast-forward / borrado de branch (para todos, incluido el integrador). Override consciente: `GO_FORCE_OK=1`.
-
-Instalar / reinstalar en todos los repos:
-
-```bash
-bash scripts/install-git-guard.sh
-```
-
-Los override (`GO_PUSH_OVERRIDE`, `GO_FORCE_OK`) existen para casos legitimos,
-pero obligan un acto consciente. Un agente NO los activa salvo orden explicita del usuario.
+Si el accidente fue en otra maquina: el reflog vive AHI. Sin commit: backup/Time Machine de esa maquina.
+Server-side: el API de eventos del remoto muestra los push (before/after) y deja el SHA viejo accesible un tiempo.
