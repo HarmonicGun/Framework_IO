@@ -2,10 +2,10 @@
   "dept": "Technology",
   "locale": "es",
   "brand": {
-    "logo": "go",
-    "title": "Observatorio IO",
-    "subtitle": "Inteligencia Operativa",
-    "org": "Grupo Ortiz",
+    "logo": "TC",
+    "title": "Tech Command Center",
+    "subtitle": "Technology Intelligence",
+    "org": "Tech Department",
     "accent": "#FB670B"
   },
   "dataModel": {

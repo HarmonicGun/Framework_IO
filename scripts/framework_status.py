@@ -6,21 +6,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "playbook_registry.json"
 ICONS = {"Verde": "V", "Amarillo": "A", "Rojo": "R", "Gris": "-", "Excluido": "X"}
-SHORT = {
-    "automatizacion ventas sacos": "Sacos",
-    "ventas_rafias_go": "Rafias",
-    "market_intelligence": "Market",
-    "multiestudo_mercado": "Multi",
-    "charolas": "Charolas",
-    "Own AI": "OwnAI",
-    "social_media_bot": "Bot",
-    "Analisis de mercado": "Analisis",
-    "IDENTIDAD DE MARCA": "ID",
-    "Learning_with_claude": "Learn",
-    "Estrategia Eficiencia IA": "Estrat",
-    "viral_reels_guiones": "Reels",
-    "alter_claude": "Alter",
-}
 
 def load():
     with open(REGISTRY) as f:
@@ -42,7 +27,7 @@ def compact(data):
         elif sem == "Amarillo": a += 1
         elif sem == "Rojo": r += 1
         icon = ICONS.get(sem, "?")
-        name = SHORT.get(pid, pid[:6])
+        name = p.get("short_name", pid[:6])
         mvp = p.get("%_mvp", "?")
         has_block = p.get("bloqueo_principal")
         marker = "!" if has_block else ""
@@ -58,7 +43,7 @@ def full(data):
     for pid, p in data.get("projects", {}).items():
         if not is_active(p):
             continue
-        name = SHORT.get(pid, pid[:14])
+        name = p.get("short_name", pid[:14])
         mvp = f"{p.get('%_mvp', '?')}%"
         sem = p.get("semaforo", "?")
         bloqueo = (p.get("bloqueo_principal") or "-")[:30]

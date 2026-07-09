@@ -11,10 +11,10 @@ var _FB = {
 
   // Branding
   brand: {
-    logo: 'go',
-    title: 'Observatorio IO',
-    subtitle: 'Inteligencia Operativa',
-    org: 'Grupo Ortiz',
+    logo: 'TC',
+    title: 'Tech Command Center',
+    subtitle: 'Technology Intelligence',
+    org: 'Tech Department',
     accent: '#FB670B'
   },
 
@@ -112,7 +112,7 @@ var _FB = {
       tableRepos: 'Repos'
     },
     export: {
-      brand: 'Observatorio IO',
+      brand: 'Tech Command Center',
       confidential: 'Confidencial',
       generating: 'generando…',
       desktopOk: 'desktop',

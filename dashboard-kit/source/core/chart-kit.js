@@ -115,8 +115,8 @@ function mkGraph(elId,act,big){attachGraphHover(mk(elId,graphOption(act,big)));}
 // commits_by_day es una serie DISPERSA (solo dias con actividad, sin ceros)
 // dentro de la ventana 90d del snapshot. filt()-suma es correcta porque sumar
 // no requiere dias-cero. Mismo patron exacto que rankByRange() y personRangeCommits().
-// SIN serie (5 proyectos: observatorio_io, iniciativa_delta, alter_claude, Own AI,
-// multiestudo_mercado) -> retorna 0 (NO commits_30d): sin serie = sin actividad
+// SIN serie (proyectos sin commits_by_day poblado en el snapshot)
+// -> retorna 0 (NO commits_30d): sin serie = sin actividad
 // medible en ningun rango. Asi NO se mezcla semantica rango-real con dato-fijo-30d.
 function projRangeCommits(slug){
   var pd=(S.projects_detail||{})[slug];

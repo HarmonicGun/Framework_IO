@@ -211,6 +211,8 @@ Este repo contiene:
 
 ### Tokens base obligatorios
 
+> Los valores de abajo son el ejemplo real del autor (su propio repo publico de diseno, referenciado arriba). No son un requisito fijo del framework: cada departamento clona o crea SU PROPIO sistema de diseno y sustituye estos valores por los suyos. Lo obligatorio es tener una fuente unica de verdad visual, no estos colores/fuentes especificos.
+
 **Paleta:**
 | Color | Hex | Uso |
 |---|---|---|

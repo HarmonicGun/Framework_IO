@@ -80,9 +80,9 @@ body{background:var(--black);color:var(--text);font-family:var(--ui);font-size:1
 <body>
 
 <div class="hdr">
-  <div class="logo">GO</div>
+  <div class="logo">___BRAND_LOGO___</div>
   <div>
-    <div class="hdr-title">Informe Ejecutivo Semanal — Inteligencia Operativa</div>
+    <div class="hdr-title">___BRAND_TITLE___</div>
     <div class="hdr-sub">___HEADER_DATE___</div>
   </div>
   <div class="hdr-badge">___HEADER_BADGE___</div>
@@ -116,7 +116,7 @@ body{background:var(--black);color:var(--text);font-family:var(--ui);font-size:1
 
 <div class="ftr">
   <p>___FOOTER_DATE___</p>
-  <p>la organizacion · Inteligencia Operativa · Confidencial</p>
+  <p>___BRAND_FOOTER___ · Confidencial</p>
 </div>
 
 </body>

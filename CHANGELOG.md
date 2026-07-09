@@ -1,5 +1,72 @@
 # Changelog
 
+## [1.1.0] — 2026-07-09
+
+### Fixed — hallazgo critico de sincronizacion
+- `CLAUDE.md`, `PLAYBOOK.md` y `FRAMEWORK.md` no se habian vuelto a commitear desde el commit inicial `Add files via upload` (confirmado via `git log -- <archivo>`). Quince entradas de este CHANGELOG (v0.2.0 a v1.0.4) documentaban cambios a estos 3 archivos que nunca llegaron al working tree real — el CHANGELOG avanzaba, los archivos no. `GIT_PROTOCOL.md`, `CHANGELOG.md`, `VERSION` y `LICENSE.md` si se habian sincronizado correctamente en su momento.
+- Reconstruidos los 3 archivos desde la copia privada (`framework_operative_enforcement/`) sanitizada, incorporando todo lo documentado en versiones anteriores mas todo lo agregado en enforcement desde entonces.
+- `PLAYBOOK.md` — ejemplo de statusline volvia a filtrar nombres de proyecto reales (regresion sobre el fix ya aplicado en v0.2.0). Reemplazado por placeholders genericos.
+- `AUTHORS.md` / `LICENSE.md` — habian vuelto a filtrar nombre de empresa/departamento/branch real (regresion sobre el fix ya aplicado en v0.2.0). Sincronizados con la version limpia de enforcement.
+- `FRAMEWORK.md` — referencia fantasma a `PLAN.md` en "Punto de entrada del agente" (el fix de v0.2.0 tampoco habia llegado al archivo real). Eliminada.
+- `CLAUDE.md` — bug de lettering duplicado en frases de activacion (dos secciones "C"). Corregido A-I.
+- `scripts/framework_status.py` — diccionario `SHORT` hardcodeado con 13 nombres de proyectos/carpetas reales (mismo fix que el changelog de v0.2.0 ya declaraba hecho y nunca aplico). Eliminado; ahora lee `short_name` del proyecto en el registry, con fallback al id truncado.
+- `dashboard-kit/profiles/tech.js` y `dashboard-kit/source/config/defaults.js` — el perfil "tech" y el fallback base traian hardcodeado el nombre real de la empresa y del producto interno como default, inconsistente con los perfiles `sales.js`/`finance.js` (que si estaban genericos). Alineado al mismo patron generico.
+
+### Fixed — segunda pasada (verificacion adversarial post-escritura)
+- `dashboard_semanal.js` / `generar_imagenes.js` (raiz) — eliminados. Eran scripts sueltos, sin referencia en ninguna documentacion, con datos reales de un reporte historico (nombre de persona real, 2 codenames de proyecto reales, fecha real) y uno de los dos referenciaba un archivo HTML que ni siquiera existe en el kit. Superados por `scripts/screenshot_report.js` + `scripts/friday_report_to_html.py`, que si estan documentados.
+- `dashboard-kit/source/presentation-engine.js`, `dashboard-kit/source/config/defaults.js`, `dashboard-kit/source/dashboard.template.html` — 3 defaults hardcodeados con el nombre real del producto interno (contradiciendo el propio comentario del template que dice "sin referencias especificas de organizacion"). Alineados al placeholder generico.
+- `dashboard-kit/source/core/chart-kit.js` — comentario de codigo con 5 slugs de proyecto reales. Genericizado.
+- `scripts/friday_dashboard.html.template` + `scripts/friday_report_to_html.py` — logo/titulo/pie de pagina del reporte ejecutivo estaban hardcodeados con marca real, nunca parametrizados por el script. Agregados placeholders `___BRAND_LOGO___`/`___BRAND_TITLE___`/`___BRAND_FOOTER___` con default generico real (antes era texto fijo sin mecanismo de configuracion).
+- `dashboard_gen.py` — pie de pagina con nombre real de departamento en 2 vistas (desktop/mobile), el resto del archivo ya estaba genericizado.
+- `CASO_DE_USO.md` — una linea filtraba el nombre real de departamento pese a que el resto del caso disfraza al cliente como empresa ficticia.
+- `CLASE_30MIN.md` — la tabla de tokens de marca (paleta/tipografia/variables CSS) no aclaraba que son el ejemplo real del autor para adaptar, no un requisito fijo. Agregado disclaimer explicito.
+- `PLAYBOOK.md` seccion 6 — "Fase 1/Fase 2" del pipeline de intake colisionaba con la numeracion canonica de Fases 0-9 de `FRAMEWORK.md` (dos definiciones distintas del mismo numero). Renombrado a "Paso 1-4" + nota aclaratoria.
+- `CLAUDE.md` — referencia rota "seccion 11" (deberia decir `PLAYBOOK.md` seccion 12) al consolidar metricas de agentes el viernes.
+- `CLAUDE.md` 0.5 vs 0.3.2 — la escalera de escalamiento y Modo Quirurgico daban dos respuestas distintas para el mismo disparador ("3+ archivos"). Alineados: nivel Critico ahora replica exactamente el disparador de Modo Quirurgico; nivel Significativo ya no se solapa con el.
+- `CLAUDE.md` 0.3.1 vs 0.5 — construccion adversarial "sin excepcion" no dejaba lugar para el nivel Moderado de la escalera (cambios chicos y reversibles). Agregada excepcion de escala explicita.
+- `PLAYBOOK.md` — la separacion "costo interno vs presentacion" no tenia mecanismo real: las metricas de agentes se anexaban al mismo reporte que lee direccion. Ahora se generan en archivo separado por diseño, no solo con una etiqueta "(uso interno)".
+- `CLAUDE.md` seccion 11 — anotado que los nombres de modelo (Sonnet/Fable/Haiku) son ejemplos de la familia Claude vigente al escribir esto, no una promesa fija — evita presentar nombres de modelo como hecho inmutable.
+- `PLAYBOOK.md` 5.0.1 — duplicaba casi textual la estrategia de compactacion ya definida en `CLAUDE.md` 0.4. Reemplazado por referencia cruzada.
+
+### Added — protocolo git
+- `GIT_PROTOCOL.md` FASE 6 — segundo loop de verificacion (replica master→ramas, no solo tags) + re-fetch previo al cierre.
+- `GIT_PROTOCOL.md` R4 — tecnica `git show :1:/:2:/:3:` para inspeccionar conflictos antes de resolver; gate semantico explicito (sin marcadores + suite verde).
+- `GIT_PROTOCOL.md` R2 — remoto de master como blanco de reset igualmente prohibido.
+- `GIT_PROTOCOL.md` R5 — el porque del patron de lease (nunca decidir sobre datos obsoletos).
+- `GIT_PROTOCOL.md` R8 — stash drop/clear/pop y branch -f/checkout -B agregados a la lista de operaciones que exigen materializar cambios primero.
+- `GIT_PROTOCOL.md` R11 — bundles fuera de carpetas sincronizadas + verificacion explicita de integridad.
+- `GIT_PROTOCOL.md` R1 — accion explicita cuando el gate de pusheado falla.
+- `GIT_PROTOCOL.md` FASE 0 — comando exacto de driver de merge.
+- `GIT_PROTOCOL.md` Enforcement — self-test obligatorio del hook (caso permitido + caso bloqueado) antes de confiar en el.
+
+### Added — metodologia (sync completo desde enforcement)
+- `CLAUDE.md` 0.1-0.4 — anti-complacencia, honestidad y precision, planeacion/tareas atomicas, construccion adversarial, Modo Quirurgico, optimizacion de contexto (lectura por niveles, path-scoped rules, compaction, handoff de sesion).
+- `CLAUDE.md` seccion 6 — ordenamiento dinamico de proyectos (formula de prioridad + auto-escalado).
+- `CLAUDE.md` seccion 7 — auditoria periodica obligatoria (15 dias).
+- `FRAMEWORK.md` Fase 3.5 — Modo Quirurgico como fase formal del pipeline.
+- `FRAMEWORK.md` Fase 6 — Metodologia de Revision Critica completa (10 roles adversariales, 10 preguntas por modulo, formato de reporte, severidad, pruebas curl, integridad DB).
+- `FRAMEWORK.md` — Metodologia de implementacion y verificacion (10 subsecciones): verificacion dual, clasificacion de hallazgos por origen, blast radius, anti-patrones de codigo, trazabilidad de bugs.
+- `FRAMEWORK.md` — Observabilidad SIEM/EDR/XDR completa (endpoints, formato ECS, tabla DB, checklist).
+- `FRAMEWORK.md` — excepcion README para proyectos tecnicos, confidencialidad de proyectos, gobernanza de componentes UI compartidos, modo oscuro por defecto.
+- `PLAYBOOK.md` principio 8 — referencia a Modo Quirurgico.
+- `PLAYBOOK.md` 5.0.1 — gestion de sesiones (naming, compaction, higiene de contexto).
+
+### Added — nuevo: gobernanza para direccion y administrativos
+- `CLAUDE.md` seccion 0.5 — escalera de escalamiento a humano (trivial/moderado/significativo/critico), pensada para quien no programa.
+- `CLAUDE.md` seccion 10 — regla de capa ejecutiva: todo entregable que pueda leer alguien no tecnico arranca con 3 lineas (que paso / que significa / que se necesita de direccion) antes del detalle.
+- `PLAYBOOK.md` seccion 7 — reporte semanal con capa ejecutiva y panel de "Top riesgos del portafolio" consolidado (antes solo existia por proyecto).
+- `PLAYBOOK.md` seccion 8 — presentacion mensual ejecutiva no-tecnica (timeline + panel, reglas de contenido cero-financiero, checklist), version generica.
+- `PLAYBOOK.md` seccion 12 — Metricas de Agentes (tokens, sub-agentes, tasa de exito, costo estimado), explicitamente marcada como uso interno, nunca en presentacion.
+- Regla explicita de separacion costo-interno vs presentacion-cero-financiero en `CLAUDE.md` y `PLAYBOOK.md`.
+
+### Added — nuevo: uso agentico avanzado (Sonnet / Fable / orquestacion)
+- `CLAUDE.md` seccion 11 — matriz de seleccion de modelo por tipo de tarea (razonamiento vs redaccion ejecutiva/creativa vs exploracion economica vs decision humana), reglas de cuando SI y cuando NO orquestar multiples agentes en paralelo (disciplina de costo), patrones reutilizables (exploracion paralela, revision adversarial independiente, pipeline vs barrera, loop-hasta-vacio), regla de no delegar el entendimiento.
+- `FRAMEWORK.md` "Tooling — Claude Code" — reescrita: quito referencia obsoleta a `/ultrathink`, agrega tabla de referencia tecnica de sub-agentes/orquestacion, cross-ref a la matriz de modelos.
+
+### Changed
+- `PLAYBOOK.md` seccion 11 (antes) — lista de scripts sincronizada con lo que realmente existe en `scripts/`.
+- `VERSION` — 1.0.4 → 1.1.0
+
 ## [1.0.4] — 2026-06-13
 
 ### Added

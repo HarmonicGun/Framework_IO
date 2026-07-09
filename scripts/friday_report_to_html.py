@@ -347,7 +347,14 @@ def render_html(
     active = [p for p in projects if p.get("metrics", {}).get("traffic_light") != "unknown"]
     project_cards = "\n".join(render_project_card(p, wow) for p in active)
 
+    brand_logo = meta.get("brand_logo", "DO")
+    brand_title = meta.get("brand_title", "Informe Ejecutivo Semanal")
+    brand_footer = meta.get("brand_footer", "tu organizacion")
+
     html = template
+    html = html.replace("___BRAND_LOGO___", brand_logo)
+    html = html.replace("___BRAND_TITLE___", brand_title)
+    html = html.replace("___BRAND_FOOTER___", brand_footer)
     html = html.replace("___HEADER_DATE___", f"Semana del {report_date}")
     html = html.replace("___HEADER_BADGE___", f"SEMANA {report_date}")
     html = html.replace("___VERDICT_TEXT___", verdict)

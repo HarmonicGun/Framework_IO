@@ -2,15 +2,14 @@
 
 ## Primary Author
 
-**Jose Martin Aguilar** — Creator and primary author of the KP-IA Frameworks operative system.
+**Jose Martin Aguilar (HarmonicGun)** — Creator and primary author of the KP-IA Frameworks operative system.
 
 - GitHub: [HarmonicGun](https://github.com/HarmonicGun)
 - Email: hummer2.0@hotmail.com
-- Branch: `joseaguilar_go` — active usage in Inteligencia Operativa (GO), Grupo Ortiz.
 
-## Usage by Inteligencia Operativa (GO)
+## Usage
 
-This framework is used internally by Inteligencia Operativa, the AI operations department at Grupo Ortiz, under the author's direct supervision and authorization. No additional license fees apply to Inteligencia Operativa / Grupo Ortiz usage, as the author is the department lead and original creator of the framework.
+This framework is provided under the terms in LICENSE.md. For commercial licensing inquiries, contact the author directly.
 
 ## Copyright
 

@@ -28,7 +28,7 @@ Nunca al reves. Nunca con force. Nunca con reset. Nunca a ciegas.
 - Anunciar ventana de integracion. Durante ella NINGUN ingeniero pushea/pullea/mergea-master.
 - Un solo integrador toca master a la vez. Tomar lock: `git push origin HEAD:refs/heads/lock-master` (si falla = otro lo tiene; esperar).
 - Integrar desde un clon FUERA de cualquier carpeta sincronizada (Drive/Dropbox), o pausar la sync toda la ventana (el `.git` sincronizado se corrompe a media operacion).
-- Por clon: `git config operador.maquina "<Nombre exacto de OWNERS.md>"`, drivers de merge requeridos, hook `pre-push` presente y self-test verde. En Windows: `git config core.autocrlf input`.
+- Por clon: `git config operador.maquina "<Nombre exacto de OWNERS.md>"`. Si `.gitattributes` declara un driver de merge (ej. `archivo.lock merge=ours`), registrarlo con el comando exacto: `git config merge.ours.driver true`. Hook `pre-push` presente y self-test verde (ver Enforcement mecanico). En Windows: `git config core.autocrlf input`.
 
 ### FASE 1 — Gate de PUSHED (cada ingeniero en SU clon)
 ```bash
@@ -81,12 +81,21 @@ done                                            # non-ff -> esa rama tiene traba
 - Cada ingeniero: `git merge --ff-only origin/<su-rama>`.
 - El integrador en su local: `git pull --ff-only` de ULTIMO.
 
-### FASE 6 — Cierre (prueba de cero perdida)
+### FASE 6 — Cierre (prueba de cero perdida, DOS loops)
 ```bash
+git fetch --all --prune --tags     # re-fetch: no verificar contra datos viejos
+
+# Loop 1 — nada del trabajo original quedo fuera de master
 for t in $(git tag -l "pre-integracion/*-$TS"); do echo "== $t =="; git log --oneline "master..$t"; done
 #   ^ TODO debe salir VACIO. Ningun autor debe desaparecer. Suite verde.
+
+# Loop 2 — CADA rama replicada quedo identica a master (no desactualizada, no parcial)
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master)$'); do
+  echo "== $r =="; git log --oneline "origin/master..origin/$r"
+done
+#   ^ TODO debe salir VACIO.
 ```
-Soltar lock, reanudar sync, declarar ventana cerrada. No borrar tags/bundle sin visto bueno.
+Solo con AMBOS loops vacios se declara "prueba de cero perdida" cumplida. Recien entonces soltar lock (`git push origin --delete lock-master`), reanudar sync pausada, declarar ventana cerrada. No borrar tags/bundle sin visto bueno explicito del dueno del repo.
 
 ---
 
@@ -126,27 +135,27 @@ Si aun no, sigue commiteando normal a tu rama. Cuando avise "ya sincronice", cor
 
 ## REGLAS DURAS (cada una mata un desastre)
 
-**R1 — Push primero.** Commit local sin push se evapora si alguien mueve el puntero. Antes de alinear/resetear: `git log origin/<rama>..HEAD` VACIO.
+**R1 — Push primero.** Commit local sin push se evapora si alguien mueve el puntero. Antes de alinear/resetear: `git log origin/<rama>..HEAD` VACIO. Si NO sale vacio, la accion obligatoria es pushear esos commits primero — nunca alinear/resetear/reemplazar la rama mientras haya commits locales sin subir.
 
-**R2 — CERO reset-to-master.** PROHIBIDO para "alinear": `git reset --hard master`, `git branch -f <rama> master`, `git checkout -B <rama> master`, GUI "Reset to master", `git push -f origin master:<rama>`. Alinear = SOLO `git merge --ff-only` o `git push origin master:<rama>` (FF). El FF que falla protege; el reset pisa.
+**R2 — CERO reset-to-master.** PROHIBIDO para "alinear": `git reset --hard master`, `git reset --hard origin/master` (el remoto es blanco tan prohibido como el local), `git branch -f <rama> master`, `git checkout -B <rama> master`, GUI "Reset to master", `git push -f origin master:<rama>`. Alinear = SOLO `git merge --ff-only` o `git push origin master:<rama>` (FF). El FF que falla protege; el reset pisa.
 
 **R3 — Divergencia = merge, nunca force.** Rama y master avanzaron ambos: se unen SOLO con `git merge --no-ff` (2 padres = cero perdida). Nunca `git push -f`, nunca `git pull` pelado.
 
-**R4 — Conflicto = UNION hunk por hunk.** El archivo resuelto es SUPERSET de ambos lados. PROHIBIDO `-X ours/theirs` y `git checkout --ours/--theirs <archivo>` en bloque. Cerrar con suite verde.
+**R4 — Conflicto = UNION hunk por hunk.** El archivo resuelto es SUPERSET de ambos lados. PROHIBIDO `-X ours/theirs` y `git checkout --ours/--theirs <archivo>` en bloque. Para inspeccionar cada lado ANTES de decidir la union: `git show :1:<archivo>` (base comun), `:2:<archivo>` (nuestro lado), `:3:<archivo>` (lado entrante) — nunca resolver a ciegas. Cierre = gate semantico, no solo sintactico: (1) sin marcadores de conflicto Y (2) suite verde. Un archivo "limpio" puede seguir logicamente roto si solo se verifico (1).
 
-**R5 — Integracion por lease.** Re-fetch JUSTO antes de cada operacion; fijar `SHA=$(git rev-parse origin/B)` y mergear el SHA. Re-verificar carrera tras integrar.
+**R5 — Integracion por lease.** Ninguna decision de merge, conflicto o verificacion es valida si se basa en una lectura vieja del remoto. Re-fetch JUSTO antes de cada operacion; fijar `SHA=$(git rev-parse origin/B)` y mergear el SHA fijo (no el nombre de la rama, que puede seguir avanzando). Re-verificar carrera tras integrar (re-fetch la rama origen, confirmar que no llegaron commits nuevos durante la operacion).
 
 **R6 — Un integrador a la vez.** Serializar con lock + freeze. Push a master non-ff = el otro movio master: re-fetch + merge, NUNCA -f.
 
 **R7 — Replicar = FF puro.** `git push origin master:<rama>` sin -f. Rechazo non-ff = rama con trabajo sin integrar -> FASE 3.
 
-**R8 — Working dir sucio se materializa** (`git stash -u` / commit a rama WIP / bundle) antes de checkout/reset/pull/merge/rebase/clean.
+**R8 — Working dir sucio se materializa** (`git stash -u` / commit a rama WIP / bundle) antes de checkout/reset/pull/merge/rebase/clean. Aplica IGUAL antes de descartar o aplicar un stash guardado (`drop`/`clear`/`pop`) y antes de forzar o recrear un puntero de rama (`branch -f`, `checkout -B`). Prohibido un checkout que descarte cambios de archivos trackeados o un reset duro con cambios sin guardar.
 
 **R9 — El guard viaja con el repo.** Hook versionado en `.githooks/pre-push` + `core.hooksPath` o instalador dentro del repo. Ningun clon pushea master sin self-test verde + identidad configurada.
 
 **R10 — Pusheado = jamas rebase.** Solo se rebasea lo 100% local sin pushear. Verificar `git log origin/<rama>..HEAD`.
 
-**R11 — Tags y bundles SE PUSHEAN.** El reflog es local. `git push origin <tag>`. Nombres unicos (timestamp a segundo); verificar que se crearon.
+**R11 — Tags y bundles SE PUSHEAN.** El reflog es local. `git push origin <tag>`. Nombres unicos (timestamp a segundo). Bundles y clones de integracion fuera de CUALQUIER carpeta con sincronizacion en la nube (Drive/Dropbox/OneDrive) — ese tipo de carpeta corrompe el `.git` a media operacion. No dar por buena la creacion solo porque el comando no mostro error: verificar explicitamente que el tag apunta a un commit real (`git rev-parse <tag>`) y que el bundle es integro y restaurable (`git bundle verify`).
 
 **R12 — Enumerar ramas dinamicamente; nombres EXACTOS.** `git for-each-ref refs/remotes/origin`, nunca lista hardcodeada ni teclear nombres (typos/case crean ramas fantasma).
 
@@ -174,6 +183,17 @@ agregarlo a `INTEGRADOR_MASTER` en OWNERS.md y que configure su `operador.maquin
 bash deploy/install-git-guard.sh        # o el instalador del framework
 git config operador.maquina "Tu Nombre Completo"
 ```
+
+**Self-test obligatorio antes de confiar en el hook** (R9): un hook instalado pero nunca probado puede dejar pasar todo (falso positivo de seguridad) o bloquear al dueno legitimo. Verificar AMBOS casos antes de asumir que protege:
+
+```bash
+# (a) debe PERMITIR push a master con la identidad autorizada configurada
+git config operador.maquina "<Nombre exacto de OWNERS.md>" && git push origin master   # o --dry-run si existe
+
+# (b) debe BLOQUEAR push a master simulando una identidad no autorizada
+git config operador.maquina "Nombre Cualquiera" && git push origin master   # debe fallar
+```
+Solo si (a) pasa y (b) falla como se espera, el guard se considera operativo.
 
 ## Recuperacion si algo ya se orfano
 

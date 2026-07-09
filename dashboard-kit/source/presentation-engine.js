@@ -6,7 +6,7 @@
 // ─── PRESENTATION 2.0 ─────────────────────────────────────────────
 let PIDX=0, PSCENES=[], PCHARTS=[], PTIMERS=[], PAUTO=false, PPARTS=null;
 const PAUTO_MS=7000;
-function presBrand(){return Object.assign({logo:'io',title:'Observatorio',org:'',accent:'#FB670B'},window.PRES_BRAND||{});}
+function presBrand(){return Object.assign({logo:'TC',title:'Tech Command Center',org:'',accent:'#FB670B'},window.PRES_BRAND||{});}
 function presReduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
 function presProjectGridClass(count){
   if(count<=1)return ' cols-1';

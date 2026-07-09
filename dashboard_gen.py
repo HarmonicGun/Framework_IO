@@ -237,7 +237,7 @@ def build_html_desktop():
         </div>
 
         <div class="footer">
-            <p>Inteligencia Operativa | Reporte automatizado</p>
+            <p>Reporte automatizado del portafolio</p>
         </div>
     </div>
 
@@ -453,7 +453,7 @@ def build_html_mobile():
         </div>
 
         <div class="footer">
-            <p>Inteligencia Operativa — Reporte automatizado</p>
+            <p>Reporte automatizado del portafolio</p>
         </div>
     </div>
 

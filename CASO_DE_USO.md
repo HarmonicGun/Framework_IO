@@ -27,7 +27,7 @@ La empresa tenia 18 proyectos de IA corriendo en paralelo:
 
 ## La implementacion
 
-El framework se implemento como sistema operativo del departamento de Inteligencia Operativa.
+El framework se implemento como sistema operativo del departamento de automatizacion e inteligencia artificial.
 
 Archivos de configuracion: 3 archivos raiz + 1 archivo de contexto + 1 registry.
 
