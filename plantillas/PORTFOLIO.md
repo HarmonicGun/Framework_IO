@@ -2,7 +2,7 @@
 
 > Ultima actualizacion: {{FECHA}}
 > Proposito: referencia ejecutiva y operativa para seguimiento semanal del portafolio del departamento.
-> Conectado con `agent_operating_mode.md` para activacion conversacional y con `playbook_departamental.md` para reglas de operacion.
+> Conectado con `CLAUDE.md` para activacion conversacional y con `PLAYBOOK.md` para reglas de operacion.
 
 ---
 

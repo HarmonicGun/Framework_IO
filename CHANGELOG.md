@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.0] — 2026-07-14
+
+### Added
+- `CLAUDE.md` seccion 0.6 "Principios de Karpathy" — REGLA PERMANENTE nueva, en paridad con `framework_operative_enforcement/CLAUDE.md`: vibe coding tiene limite, el agente es junior rapido no oraculo, el slider de autonomia se gana, el prompt es codigo, iterar en bloques chicos verificables
+- `CLAUDE.md` seccion 13 "MCP Servers — NotebookLM" (faltaba, era omision simple — contenido 100% generico)
+- `CLAUDE.md` 0.4: bullet `Esc + Esc` → `/rewind` en estrategia de compactacion, subseccion "Ciclo de vida de memoria" (umbrales de dias sin actividad, ver `ONBOARDING.md`)
+- `CLAUDE.md` seccion 6: bullet de referencia a `scripts/framework_status.py full`
+- `FRAMEWORK.md`: "Formato del veredicto final" (plantillas NO APTO / APTO CON RIESGOS CONTROLADOS) en la seccion de revision Fase 6 — se habia perdido en la condensacion previa
+- `FRAMEWORK.md` 4.9 "Tool descriptions = documentacion del LLM" — regla que tampoco sobrevivio la condensacion previa
+- `ONBOARDING.md` seccion 3.5 "Git workflow para el equipo (opcional)" y seccion 10 "NotebookLM MCP" — existian en `framework_operative_enforcement/ONBOARDING.md` y nunca se habian sincronizado
+- `plantillas/registry.json`: schema 1.1 → 1.2 (dict-keyed por id de proyecto, agrega bloque `metricas_agentes` con tokens/subagentes/costo interno)
+- `scripts/framework_status.py`: reemplazado por la version robusta de enforcement (busqueda de registry en multiples ubicaciones, helper `get_short()`, set `INACTIVAS` mas amplio)
+- `scripts/install-git-guard.sh`: v1 (single-owner) → v3 (autoriza por `operador.maquina` contra `OPERADOR_MAQUINA` o lista `INTEGRADOR_MASTER` de `OWNERS.md`, auto-contenido para clones standalone)
+
+### Fixed
+- `plantillas/PORTFOLIO.md`: referencias rotas a `agent_operating_mode.md` y `playbook_departamental.md` (archivos que no existen en el kit) → corregidas a `CLAUDE.md` y `PLAYBOOK.md`
+
+### Changed
+- `VERSION`: 1.1.0 → 1.2.0
+
 ## [1.1.0] — 2026-07-09
 
 ### Fixed — hallazgo critico de sincronizacion

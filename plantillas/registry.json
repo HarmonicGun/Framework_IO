@@ -1,14 +1,14 @@
 {
-  "_schema": "1.1",
+  "_schema": "1.2",
   "_descripcion": "Registro estructurado de proyectos del portafolio. Se actualiza cada viernes. Incluye historial para acumulacion mensual de KPIs.",
   "_ultima_actualizacion": "{{FECHA}}",
   "departamento": "{{NOMBRE_DEPARTAMENTO}}",
-  "proyectos": [
-    {
-      "id": "{{ID_1}}",
+  "proyectos": {
+    "{{ID_1}}": {
       "nombre": "{{NOMBRE_1}}",
       "carpeta": "{{CARPETA_1}}",
       "owner": "{{OWNER_1}}",
+      "short_name": "{{NOMBRE_CORTO_1}}",
       "clasificacion": "{{CLASIFICACION_1}}",
       "fase": {{FASE_1}},
       "estado": "{{ESTADO_1}}",
@@ -25,13 +25,23 @@
           "flujos_implementados": 0,
           "flujos_testeados": 0,
           "semaforo": "{{SEMAFORO_1}}",
-          "bloqueo": "{{BLOQUEO_1}}"
+          "bloqueo": "{{BLOQUEO_1}}",
+          "tokens_entrada": 0,
+          "tokens_salida": 0,
+          "modelo_principal": ""
         }
       ],
       "dias_sin_actividad": 0,
-      "ultima_entrada_diario": "{{FECHA}}"
+      "ultima_entrada_diario": "{{FECHA}}",
+      "metricas_agentes": {
+        "tokens_entrada": 0,
+        "tokens_salida": 0,
+        "subagent_exitosos": 0,
+        "subagent_fallidos": 0,
+        "costo_estimado": 0.0
+      }
     }
-  ],
+  },
   "metricas_departamento": {
     "total_proyectos": {{TOTAL}},
     "activos": {{ACTIVOS}},

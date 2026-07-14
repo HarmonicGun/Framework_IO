@@ -845,6 +845,22 @@ Ejecutar queries de integridad. Si cualquiera devuelve filas, el sistema NO esta
 - Registros duplicados donde deberian ser unicos
 - Entidades en estado final sin trazabilidad del paso anterior
 
+#### Formato del veredicto final
+
+NO APTO:
+```
+NO APTO para produccion todavia.
+Razon: aunque los tests pasan, encontre N rutas donde un usuario real puede romper el flujo en menos de 5 minutos:
+1. ...
+Antes de seguir operando, arreglar en este orden: 1. ... 2. ... 3. ...
+```
+
+APTO CON RIESGOS:
+```
+APTO CON RIESGOS CONTROLADOS.
+No encontre corrupcion de datos ni bypass de permisos en las pruebas realizadas, pero faltan pruebas manuales de navegador con usuarios reales y simulacion de falla de servicios externos.
+```
+
 #### Instruccion final para el revisor
 
 El trabajo NO es confirmar que el sistema esta bien. Es proteger la operacion.
@@ -989,6 +1005,12 @@ s = re.sub(r"[,\s]", "", str(v).strip())  # "24,95" -> "2495"
 # BIEN — normaliza coma->punto primero, luego limpia
 s = str(v).strip().replace(",", ".").replace(" ", "")
 ```
+
+##### 4.9 Tool descriptions = documentacion del LLM
+
+Las descripciones de tools son LO UNICO que el LLM lee para saber como usar una herramienta. Si la descripcion dice "solo funciona en estado X" pero el codigo acepta Y, el LLM NUNCA usara Y.
+
+**Regla:** Cuando se modifica la logica de una tool, verificar que su `"description"` refleje el cambio.
 
 #### 5. Protocolo de uso de agentes especializados
 

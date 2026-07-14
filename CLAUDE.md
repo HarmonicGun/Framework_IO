@@ -196,6 +196,7 @@ paths:
 
 - `/clear` entre tareas no relacionadas. Obligatorio.
 - `/compact <instrucciones>` para compresion dirigida: `/compact enfocate en cambios de API`.
+- `Esc + Esc` → `/rewind` → "Summarize from here" para comprimir parcial sin perder el resto del historial.
 - Despues de 2 correcciones fallidas al mismo problema → `/clear` y prompt nuevo, no insistir sobre un hilo contaminado.
 - En CLAUDE.md se puede indicar que preservar al compactar (ej: "preservar lista de archivos modificados y comandos de test").
 - Lo que sobrevive compaction: CLAUDE.md (releido de disco). Lo que NO sobrevive: instrucciones dadas solo en chat.
@@ -210,9 +211,16 @@ Para dudas que no deben ensuciar el historial (sintaxis, un tipo de dato, una du
 - Si crece demasiado: mover el exceso a reglas con alcance de ruta o capacidades modulares.
 - Podar regularmente: por cada regla, preguntar "si la elimino, se cometeria un error?". Si no, eliminarla.
 
+### Ciclo de vida de memoria
+
+- Inicio de sesion: verificar frescura de `context.md` y `status.md`.
+- Sin actividad por unos dias → releer el log de avances del proyecto para reconectar antes de seguir.
+- Sin actividad por mas de una semana → sugerir archivar el proyecto.
+- Fin de sesion: actualizar `status.md` y el log de avances.
+
 ### Documento de traspaso (handoff)
 
-Al cerrar una sesion de trabajo sobre un proyecto activo, generar un documento breve de traspaso: ultimo avance, pendientes exactos con ubicacion y propuesta de solucion, orden sugerido para la proxima sesion, contexto minimo para continuar sin re-explicar todo. Sin ese documento, la sesion se considera incompleta.
+Al cerrar una sesion de trabajo sobre un proyecto activo, generar un documento breve de traspaso: ultimo avance, pendientes exactos con ubicacion y propuesta de solucion, orden sugerido para la proxima sesion, contexto minimo para continuar sin re-explicar todo (stack, puertos, credenciales de prueba, archivos criticos). Sin ese documento, la sesion se considera incompleta. El siguiente agente arranca ciego si falta.
 
 ---
 
@@ -228,6 +236,20 @@ Al cerrar una sesion de trabajo sobre un proyecto activo, generar un documento b
 | **Critico** | El MISMO disparador que activa Modo Quirurgico (seccion 0.3.2): dinero, ordenes, estados de negocio, esquema de base de datos, 3+ archivos a la vez, datos de clientes/proveedores, borrar algo, publicar algo, cambiar quien tiene acceso a que | Modo Quirurgico obligatorio (seccion 0.3.2) + aprobacion explicita de un responsable con autoridad para esa decision. Nunca se activa solo. |
 
 Regla para quien no es tecnico: si no sabes en que nivel cae un pedido, pide al agente "dime en que nivel de riesgo cae esto antes de hacerlo". Cualquier persona del equipo puede exigir Modo Quirurgico en cualquier momento con solo decir "quiero planificar esto primero".
+
+---
+
+## 0.6. Principios de Karpathy — REGLA PERMANENTE
+
+**Fuente: Andrej Karpathy (Tesla AI, OpenAI, investigador de IA). Aplican a todo trabajo con agentes en este framework. Ley, no sugerencia — no se desactivan por conveniencia.**
+
+- **Vibe coding tiene limite.** Aceptar salida de IA sin leerla sirve para un prototipo desechable de fin de semana. Para cualquier cosa que toque produccion, dinero, datos de terceros o un archivo compartido: leer y entender cada cambio antes de aceptarlo. Refuerza Anti-Complacencia (0.1) y Construccion Adversarial (0.3.1).
+- **El agente es un colega junior rapido, no un oraculo.** Escribe mucho, rapido, y con total confianza — tambien cuando esta mal. Verificar es obligatorio, no opcional. "Parece que funciona" no es un veredicto; probarlo es el veredicto.
+- **El slider de autonomia se gana, no se asume.** Mas autonomia al agente = mas superficie de error sin supervision. Sube solo cuando la verificacion en ese tipo de tarea fue consistente. El nivel de autonomia lo define el riesgo (ver escalamiento, 0.5), no la comodidad del momento.
+- **El prompt es codigo.** Una instruccion ambigua produce un resultado ambiguo, igual que un bug en el codigo fuente. Especificar una tarea con el mismo rigor que se especificaria una funcion: entradas, salidas esperadas, casos borde.
+- **Iterar en bloques chicos y verificables.** Preferir muchos pasos pequeños con verificacion entre cada uno sobre un salto grande sin punto de control intermedio. Refuerza Tareas Atomicas (0.3).
+
+**Aplica a:** todo agente, todo proyecto del portfolio, sin excepcion. Esta seccion no reemplaza 0.1 / 0.3.1 / 0.5 — les da su porque.
 
 ---
 
@@ -475,6 +497,7 @@ Mayor score = mayor prioridad.
 
 - Cada lunes en sprint planning.
 - Cada viernes en consolidacion.
+- Usar `python3 scripts/framework_status.py full` para ver orden actual.
 
 ---
 
@@ -595,3 +618,36 @@ Ver `AGENTS.md` para el protocolo completo de delegacion y `FRAMEWORK.md` seccio
 | Registry | `playbook_registry.json` |
 | Plantillas | `plantillas/` |
 | Diseno visual | tu propio repositorio de marca/tokens, configurado en `context_proyectos.md` |
+
+---
+
+## 13. MCP Servers — NotebookLM
+
+El framework incluye NotebookLM como servidor MCP preconfigurado en `.mcp.json`.
+Permite preguntar notebooks de Google NotebookLM directamente desde Claude Code.
+
+**Cuando un compañero pregunte como instalarlo:**
+
+```
+Prerequisito: Node.js >= 18
+
+Paso 1: abrir Claude Code en la raiz del portafolio
+Paso 2: escribir "usa el tool setup_auth del servidor notebooklm"
+Paso 3: login Google en Chrome que se abre
+Paso 4: listo — cookies persisten, no se repite
+
+Verificar: "usa el tool get_health del servidor notebooklm"
+```
+
+**Tools clave disponibles:**
+
+| Tool | Uso |
+|---|---|
+| `setup_auth` | Auth Google — solo primera vez |
+| `ask_question` | Preguntar notebook con citas |
+| `add_source` | Agregar fuente a notebook |
+| `get_health` | Verificar conexion |
+
+**Limite:** ~50 preguntas/dia en cuenta Google free.
+**Seguridad:** sin passwords en texto plano — auth via cookies de Chrome.
+**Detalle completo:** `ONBOARDING.md` seccion 10.

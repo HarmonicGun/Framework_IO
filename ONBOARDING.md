@@ -63,6 +63,58 @@ usa el framework para empezar a trabajar el dia de hoy en mis proyectos
 
 El agente detecta que es primer uso (no existe `context_proyectos.md`), configura el sistema, detecta el dia de la semana y te deja listo para trabajar. No necesitas saber frases magicas.
 
+**Alternativa — distribucion por git (si tu equipo ya usa un repo compartido):** en vez de copiar archivos a mano, cada quien puede `git clone` el repo del kit y copiar `CLAUDE.md`/`PLAYBOOK.md`/`FRAMEWORK.md` a la raiz del portafolio, o usar el clon directo como raiz. Ventaja: auto-actualizacion (el agente puede correr un script de chequeo de commits nuevos en master al abrir Claude Code). Ver seccion 3.5 para el flujo de equipo completo con esta opcion.
+
+---
+
+## 3.5. Git workflow para el equipo (opcional — solo si distribuyes el kit por git)
+
+### Regla de oro
+
+**Solo el lead actualiza master.** Nadie mas. Sin excepciones.
+
+Esto se refuerza con:
+- Hook `pre-push` que bloquea cualquier push a master salvo identidad autorizada
+- `CLAUDE.md` que prohibe al agente hacer push/merge a master por su cuenta
+- Proteccion de rama en la plataforma de git que uses (settings del repo)
+
+### Recibir actualizaciones (todos los dias)
+
+Si automatizas la verificacion, al abrir Claude Code:
+1. El agente corre un chequeo de commits nuevos en master
+2. Si hay novedades → auto-pull
+3. Si todo OK → continuas trabajando
+
+Manual:
+```bash
+git pull origin master
+```
+
+### Crear tu propia rama (cuantas quieras)
+
+```bash
+git checkout -b tu-nombre/lo-que-hiciste
+git commit -m "tu cambio"
+```
+
+Puedes crear todas las ramas que necesites. No hay limite.
+
+### Si tu cambio deberia ir a master
+
+1. NO hagas push a master
+2. NO hagas merge local a master
+3. Contacta al lead con el detalle del cambio
+4. El revisa, aprueba y mergea si corresponde
+
+### Si accidentalmente commiteaste en master
+
+```bash
+# NO hagas push. Contacta al lead.
+git log --oneline -3  # mira tus commits locales
+```
+
+Ver `GIT_PROTOCOL.md` para el procedimiento completo de integracion sin perder trabajo.
+
 ---
 
 ## 4. Archivos del kit
@@ -142,3 +194,44 @@ Archivos minimos por proyecto: `context.md`, `status.md`, `BACKLOG.md`, `RISKS.m
 **Cambiar frases de activacion?** Si. Edita `CLAUDE.md`.
 
 **Compartir con otro depto?** Si. Copia la carpeta completa a la nueva ubicacion.
+
+---
+
+## 10. NotebookLM MCP — Setup por compañero (opcional)
+
+El servidor MCP de NotebookLM puede preconfigurarse en `.mcp.json` en la raiz del portafolio.
+Se carga automaticamente cuando abres Claude Code en esa carpeta.
+
+**Prerequisito unico:**
+```
+Node.js >= 18 instalado
+```
+
+**Auth Google (una vez por compañero):**
+
+1. Abre Claude Code en la raiz del portafolio
+2. Escribe: `usa el tool setup_auth del servidor notebooklm`
+3. Se abre Chrome — login normal con tu cuenta Google
+4. Listo. Las cookies persisten. No se repite.
+
+**Verificar que funciona:**
+```
+usa el tool get_health del servidor notebooklm
+```
+
+**Tools disponibles (perfil standard — 9 tools):**
+
+| Tool | Para que |
+|---|---|
+| `ask_question` | Preguntar contra un notebook con citas |
+| `add_source` | Agregar URL o texto a un notebook |
+| `add_notebook` | Registrar notebook en la libreria local |
+| `list_notebooks` | Ver notebooks disponibles |
+| `select_notebook` | Activar un notebook |
+| `search_notebooks` | Buscar por nombre o tema |
+| `generate_audio` | Generar resumen en audio (podcast) |
+| `get_health` | Verificar estado del servidor |
+| `setup_auth` | Autenticar con Google (solo primera vez) |
+
+**Rate limit:** ~50 preguntas/dia en cuenta Google free. Cuenta AI Pro/Ultra: sin limite practico.
+**Sin credenciales en texto plano:** la auth usa cookies de Chrome, no passwords.
