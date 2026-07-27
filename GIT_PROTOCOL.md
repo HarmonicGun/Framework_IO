@@ -44,7 +44,7 @@ Vacio = todo subido. El integrador NO arranca hasta que TODAS las ramas confirme
 ```bash
 git fetch --all --prune --tags
 TS=$(date +%Y%m%d-%H%M%S)
-for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master)$'); do
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master|origin|lock-master)$'); do
   git tag "pre-integracion/$r-$TS" "origin/$r"
   git rev-parse "pre-integracion/$r-$TS" >/dev/null || { echo "TAG FALLO $r"; exit 1; }
   git push origin "pre-integracion/$r-$TS"          # los tags se PUSHEAN: el reflog es local
@@ -71,7 +71,7 @@ Entregar la verificacion de `B` ANTES de la siguiente. TODAS las ramas se integr
 
 ### FASE 4 — Replicar master -> cada rama (FF puro)
 ```bash
-for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master)$'); do
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master|origin|lock-master)$'); do
   git log origin/master..origin/$r --oneline   # DEBE estar vacio
   git push origin master:$r                     # FF, SIN -f. Nombre EXACTO de for-each-ref
 done                                            # non-ff -> esa rama tiene trabajo sin integrar -> FASE 3
@@ -90,7 +90,7 @@ for t in $(git tag -l "pre-integracion/*-$TS"); do echo "== $t =="; git log --on
 #   ^ TODO debe salir VACIO. Ningun autor debe desaparecer. Suite verde.
 
 # Loop 2 — CADA rama replicada quedo identica a master (no desactualizada, no parcial)
-for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master)$'); do
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master|origin|lock-master)$'); do
   echo "== $r =="; git log --oneline "origin/master..origin/$r"
 done
 #   ^ TODO debe salir VACIO.
@@ -158,6 +158,9 @@ Si aun no, sigue commiteando normal a tu rama. Cuando avise "ya sincronice", cor
 **R11 — Tags y bundles SE PUSHEAN.** El reflog es local. `git push origin <tag>`. Nombres unicos (timestamp a segundo). Bundles y clones de integracion fuera de CUALQUIER carpeta con sincronizacion en la nube (Drive/Dropbox/OneDrive) — ese tipo de carpeta corrompe el `.git` a media operacion. No dar por buena la creacion solo porque el comando no mostro error: verificar explicitamente que el tag apunta a un commit real (`git rev-parse <tag>`) y que el bundle es integro y restaurable (`git bundle verify`).
 
 **R12 — Enumerar ramas dinamicamente; nombres EXACTOS.** `git for-each-ref refs/remotes/origin`, nunca lista hardcodeada ni teclear nombres (typos/case crean ramas fantasma).
+
+> **El filtro del loop lleva `origin` y `lock-master` — no los quites.** `%(refname:short)` acorta `refs/remotes/origin/HEAD` a **`origin`**, no a `HEAD`: con el filtro corto (`^(HEAD|master)$`) el loop cuela una rama fantasma `origin` en TODOS los repos. En la fase de red de seguridad eso crea un tag espurio apuntando a master y, si ademas existe una rama real llamada `origin`, la entrada sale dos veces y el loop aborta con `fatal: el tag ... ya existe` dejando la red de seguridad a medias. `lock-master` es la rama de lock de la FASE 0: no es rama de trabajo, no se tagea ni se replica.
+> Verificacion rapida: `git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#origin/##' | grep -vE '^(HEAD|master|origin|lock-master)$'` debe listar exactamente las ramas de persona, ni una mas.
 
 **R13 — Borrar rama = solo tras `git log master..origin/<rama>` VACIO + bundle.** `-D` borra aunque haya commits sin integrar.
 

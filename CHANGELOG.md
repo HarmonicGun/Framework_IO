@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1] — 2026-07-27
+
+### Fixed
+- `GIT_PROTOCOL.md` FASE 2, FASE 4 y FASE 6 Loop 2: el loop que enumera ramas dinamicamente colaba una rama fantasma `origin` en cualquier repo. Causa: `%(refname:short)` acorta `refs/remotes/origin/HEAD` a `origin`, no a `HEAD`, y el filtro era `grep -vE '^(HEAD|master)$'`. Efecto: tag espurio apuntando a master en cada integracion y, si el repo tenia ademas una rama real llamada `origin`, la entrada salia duplicada y el loop abortaba con `fatal: el tag ... ya existe` dejando la red de seguridad a medias. Filtro corregido a `grep -vE '^(HEAD|master|origin|lock-master)$'` en los tres loops; `lock-master` entra al filtro porque es la rama de lock que crea la propia FASE 0.
+- `GIT_PROTOCOL.md` R12: nota explicativa del filtro con comando de verificacion, para que nadie lo revierta.
+
+### Changed
+- `VERSION`: 1.2.0 → 1.2.1
+
 ## [1.2.0] — 2026-07-14
 
 ### Added
