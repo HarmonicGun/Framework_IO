@@ -330,11 +330,66 @@ The dashboard uses two strategies:
 2. **Server mode:** Polls `/api/health` on the configured interval. If data age
    exceeds `autoRefreshMs`, triggers SSE refresh via `/api/refresh/stream`.
 
+## Collector hygiene (server mode) — REQUIRED
+
+If your collector reads git and stores commits in a database, it MUST be able to
+DELETE, not only INSERT. A collector that only upserts silently inflates every
+metric it produces. Four failure modes, all seen in production:
+
+1. **Orphan SHAs.** After a history rewrite (purge, rebase, squash) the old
+   commits no longer exist in git, but they stay in the DB — and the same work
+   is re-inserted under new SHAs. The project gets counted twice. Fix: compare
+   stored SHAs against `git cat-file --batch-check --batch-all-objects` per repo
+   and delete what git can no longer resolve.
+   Use the whole object store on purpose: a commit that is unreachable from any
+   branch but still present is real work, not a ghost — do not delete it. If the
+   command fails, skip that repo entirely instead of deleting blind.
+2. **Repo aliases.** The same repository collected under two names (`my-app` and
+   `my_app`) duplicates every commit. Delete the rows whose SHA already exists
+   under the canonical name, then move the rest.
+3. **Project key renames.** Renaming a folder or its registry key splits one
+   project's history in two. Keep an explicit `old -> new` map and reassign.
+   Watch the UNIQUE constraints on your activity and snapshot tables: reconcile
+   colliding rows before the UPDATE or it will fail mid-run.
+4. **Split identities.** One person committing from two emails counts as two
+   people. Adding the alias is not enough — the rows already written keep the
+   old canonical value and must be re-canonicalized.
+   Do NOT re-canonicalize synthetic emails used for manual re-attribution: their
+   author name belongs to somebody else by design, so re-deriving the person
+   from the name silently reverts the override.
+
+Make it idempotent and run it at the end of every collection. Always dry-run it
+against a copy of the database and diff the result against a direct git count
+before letting it touch the real one.
+
 ## Export (PNG)
 
 The Export PNG button uses snapdom to capture `#app` (desktop 2x) and builds
 a mobile DOM (iPhone 14 Pro Max 430px, 3x). Both PNGs download sequentially.
 Requires snapdom CDN loaded. Works in modern browsers without a server.
+
+## Export (self-contained HTML report)
+
+An image cannot be read on a phone, searched, or pasted into a ticket. For a
+shareable deliverable, add a second export that renders a standalone HTML file
+server-side, scoped to the active date range and the selected entities:
+
+`GET /api/report/html?from&to&projects` -> `Content-Disposition: attachment`
+
+Rules that make it actually self-contained:
+
+- Embed fonts as `data:` URIs (woff2, latin subset is ~210 KB; the full set is
+  3x that). Embed the logo as base64. Generate charts as inline SVG.
+- Zero network requests. The file must render identically offline, from an
+  email attachment, or behind a corporate proxy.
+- Numbers come from the database; narrative comes from parsing the repo docs
+  (changelog, status, risks). No LLM call in the request path — the button has
+  to answer in under a second.
+- If a project keeps no docs, say so in the report. An empty section that
+  explains why beats an invented one.
+- Compute the health label from measured activity, never from a self-declared
+  field. A stable production project with no recent commits is in maintenance,
+  not a zombie — do not paint it red.
 
 ## Presentation mode (PRES 2.0)
 

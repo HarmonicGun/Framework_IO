@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0] — 2026-08-01
+
+### Added
+- `react_migration_protocol.md` (NUEVO, 1238 lineas) — protocolo universal y vinculante de migracion a React con hiper-mejora. Doctrina (no existe "migracion 1:1"), inventario previo obligatorio, sistema de trazabilidad `@source` origen->React, matriz de trazabilidad en JSON, criterios de verificacion por fase y catalogo de fuentes de patrones visuales. Ejecuta las fases 5-6 de `FRAMEWORK.md`. Depende de `context_desing_go/context_design.md` como fuente de verdad visual.
+- `dashboard-kit/DASHBOARD_STANDARD.md` seccion "Collector hygiene (server mode) — REQUIRED": un colector que solo hace INSERT infla todas sus metricas en silencio. Documenta los 4 modos de fallo con su arreglo — SHAs huerfanos tras reescritura de historia (verificar contra `git cat-file --batch-all-objects`, y NO borrar lo que sigue en el object store), repos con dos nombres, renombres de clave de proyecto (cuidado con los UNIQUE de las tablas de actividad y snapshots) e identidades partidas (re-canonicalizar sin tocar los emails sinteticos de re-atribucion manual). Exige idempotencia, dry-run sobre copia y diff contra un conteo directo de git antes de tocar la DB real.
+- `dashboard-kit/DASHBOARD_STANDARD.md` seccion "Export (self-contained HTML report)": segundo formato de exportacion junto al PNG. Contrato del endpoint, reglas de auto-contencion (fuentes y logo en base64, graficos SVG, cero peticiones de red), separacion cifras-desde-DB / narrativa-desde-docs sin LLM en el camino del request, y la regla de calcular el semaforo sobre actividad medida en vez de un campo autodeclarado — produccion estable sin commits es mantenimiento, no zombie.
+
+### Changed
+- `VERSION`: 1.2.1 -> 1.3.0
+
+### Nota de sanitizacion
+- El observatorio con datos reales sigue fuera del kit por regla (`CLAUDE.md` seccion 15). Lo que entra aqui es la capa portable: el estandar y el protocolo, sin nombres de personas, proyectos, dominios ni IPs.
+
 ## [1.2.1] — 2026-07-27
 
 ### Fixed
@@ -102,7 +115,7 @@
 - Modo Quirurgico v2.0.0 — Planeacion de cambios criticos (CLAUDE.md 0.3.2 + 3.H, FRAMEWORK.md Fase 3.5, PLAYBOOK.md principio 8)
 - `plantillas/PLAN_QUIRURGICO_TEMPLATE.md` — Template canonico para planes ultra-detallados
 - Procedimiento: 3 Explore + AskUserQuestion + 1 Plan + 3 Adversarial + plan linea-por-linea
-- Criterios de activacion: OV/NetSuite/DB/estados/dinero/3+ archivos
+- Criterios de activacion: dinero/ordenes/estados de negocio/esquema de DB/3+ archivos
 
 ## [0.7.1] — 2026-06-11
 
