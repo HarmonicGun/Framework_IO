@@ -1,5 +1,19 @@
 # Changelog
 
+## [No liberado] — 2026-08-20
+
+### Added
+- `DIAGRAMAS_PAPERBANANA.md` (NUEVO) — como generar los DIAGRAMAS conceptuales de la documentacion tecnica (arquitectura, pipeline, flujo entre modulos) con PaperBanana, un pipeline multi-agente (Retriever -> Planner -> Stylist -> Visualizer -> Critic) que convierte un texto de metodo + una caption en una figura de calidad de publicacion. Incluye: tabla de cuando SI y cuando NO usarla, instalacion (`git clone` del upstream en `tools/`, Python 3.12 + `uv`), requisitos de API key, invocacion por CLI con la tabla de parametros, y como se integra al flujo del proyecto.
+- **Regla de decision que trae:** si el diagrama tiene que ser EXACTO en numeros, no es para PaperBanana (usar una libreria de charts); si cabe en cuatro cajas y dos flechas, `mermaid` inline es mas barato, mas rapido y versionable en texto. La herramienta se reserva para el diagrama conceptual que de otro modo nadie dibuja.
+- **La API key la pone la persona, nunca el agente:** `OPENROUTER_API_KEY` (recomendada, cubre texto e imagen) o `GOOGLE_API_KEY`. Sin key no corre y no hay modo de respaldo — el agente la pide y se detiene. `configs/model_config.yaml` va gitignoreado: la key jamas se commitea.
+- **Aviso de costo, medido por el upstream:** cada candidato son varias llamadas a un LLM y tarda 3-10 min; con los 10 candidatos por defecto son 10-30 min y diez veces el costo de una figura. El doc obliga a bajar `--num-candidates` a 3-4 y a avisar antes de una tanda grande.
+
+## [No liberado] — 2026-08-04
+
+### Added
+- `CLOUDFLARE_TUNNEL_PROTOCOL.md` (NUEVO) — protocolo para exponer una app sin exponer el servidor. PRINCIPIO 0 (el origen nunca se expone: la app escucha solo en loopback y el unico camino publico es un tunel nombrado revocable desde el dash), reglas R1-R8, procedimiento FASE 0-6 (precheck, instalacion, autorizacion de zona con el link de `cloudflared tunnel login`, tunel nombrado con ingress, servicio systemd/launchd, ruta DNS CNAME proxied, cierre del origen con firewall default-deny + SSH solo por VPN), checklist de verificacion de 7 puntos, tabla de anti-patrones y auditoria de 30 segundos para el checkpoint semanal.
+- **Por que nace:** en un droplet real se encontro un quick tunnel (`cloudflared tunnel --url`, dominio trycloudflare) que llevaba 7 dias sirviendo la aplicacion completa a internet. Ese tipo de tunel **no aparece en el dash**: no se lista, no tiene WAF ni control de acceso, no deja logs y no se puede revocar desde el panel — solo muere matando el proceso en la maquina. La misma maquina tenia el firewall inactivo y SSH abierto a internet. R1 lo prohibe explicitamente y la FASE 0 obliga a cazarlo antes de cualquier despliegue.
+
 ## [1.3.0] — 2026-08-01
 
 ### Added

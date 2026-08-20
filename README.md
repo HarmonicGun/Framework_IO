@@ -49,6 +49,8 @@ CLAUDE.md           Entry point del agente (autoridad maxima, modos de activacio
 PLAYBOOK.md         Sistema operativo: cadencia, roles, metricas, semaforos
 FRAMEWORK.md        Framework universal: fases 0-9, seguridad, diseno
 ONBOARDING.md       Guia de instalacion (10-15 minutos)
+CLOUDFLARE_TUNNEL_PROTOCOL.md   Exponer una app sin exponer el servidor
+DIAGRAMAS_PAPERBANANA.md        Diagramas conceptuales para la documentacion
 plantillas/         Templates para portfolios, proyectos, registros
 scripts/            Automatizacion del ciclo semanal
 ```
